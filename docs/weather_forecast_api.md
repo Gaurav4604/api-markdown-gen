@@ -1,46 +1,135 @@
 ---
+api-endpoint: https://api.open-meteo.com/v1/forecast
+date: 2024-01-01
+description: Weather Forecast APIs with weather models from multiple national weather
+  providers, combining the best models for accurate forecasts worldwide. Explore the
+  API documentation to learn more about the available weather models, their origin
+  countries, resolutions, forecast lengths, and update frequencies. Get detailed JSON
+  hourly weather forecasts for up to 7 or 16 days by specifying the geographical coordinates
+  and desired weather variables in the API endpoint. Discover the comprehensive list
+  of URL parameters for customizing your weather forecast requests.
+hostname: open-meteo.com
+sitename: Open-Meteo.com
 title: Weather Forecast API
 url: https://open-meteo.com/en/docs
-hostname: open-meteo.com
-description: Weather Forecast APIs with weather models from multiple national weather providers, combining the best models for accurate forecasts worldwide. Explore the API documentation to learn more about the available weather models, their origin countries, resolutions, forecast lengths, and update frequencies. Get detailed JSON hourly weather forecasts for up to 7 or 16 days by specifying the geographical coordinates and desired weather variables in the API endpoint. Discover the comprehensive list of URL parameters for customizing your weather forecast requests.
-sitename: Open-Meteo.com
-date: 2024-01-01
 ---
-API Response
-Data Source
+
+## API Response
+
+The sample code automatically applies all the parameters selected above. It includes caching and the conversion to Pandas DataFrames.
+The use of DataFrames is entirely optional. You can find further details and examples in the [Python API client](https://pypi.org/project/openmeteo-requests/) documentation.
+
+#### Install
+
+```
+pip install openmeteo-requests
+pip install requests-cache retry-requests numpy pandas
+```
+
+
+#### Usage
+
+```
+import openmeteo_requests
+import requests_cache
+import pandas as pd
+from retry_requests import retry
+# Setup the Open-Meteo API client with cache and retry on error
+cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
+retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
+openmeteo = openmeteo_requests.Client(session = retry_session)
+# Make sure all required weather variables are listed here
+# The order of variables in hourly or daily is important to assign them correctly below
+url = "https://api.open-meteo.com/v1/forecast"
+params = {
+"latitude": 52.52,
+"longitude": 13.41,
+"hourly": "temperature_2m"
+}
+responses = openmeteo.weather_api(url, params=params)
+# Process first location. Add a for-loop for multiple locations or weather models
+response = responses[0]
+print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
+print(f"Elevation {response.Elevation()} m asl")
+print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
+print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+# Process hourly data. The order of variables needs to be the same as requested.
+hourly = response.Hourly()
+hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+hourly_data = {"date": pd.date_range(
+start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
+end = pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
+freq = pd.Timedelta(seconds = hourly.Interval()),
+inclusive = "left"
+)}
+hourly_data["temperature_2m"] = hourly_temperature_2m
+hourly_dataframe = pd.DataFrame(data = hourly_data)
+print(hourly_dataframe)
+```
+
+
+## Data Source
+
 Open-Meteo weather forecast APIs use weather models from multiple national weather providers. For each location worldwide, the best models will be combined to provide the best possible forecast.
+
 Weather models cover different geographic areas at different resolutions and provide different weather variables. Depending on the model, data have been interpolated to hourly values or not all weather variables are available. With the drop down Weather models (just below the hourly variables), you can select and compare individual weather models.
+
 | Weather Model | National Weather Provider | Origin Country | Resolution | Forecast Length | Update frequency |
 |---|---|---|---|---|---|
 |
+
 [GFS & HRRR](https://open-meteo.com/en/docs/gfs-api)
+
 [ARPEGE & AROME](https://open-meteo.com/en/docs/meteofrance-api)
+
 [IFS & AIFS](https://open-meteo.com/en/docs/ecmwf-api)
+
 [UKMO](https://open-meteo.com/en/docs/ukmo-api)
+
 [MSM & GSM](https://open-meteo.com/en/docs/jma-api)
+
 [MET Nordic](https://open-meteo.com/en/docs/metno-api)
+
 [HARMONIE](https://open-meteo.com/en/docs/knmi-api)
+
 [HARMONIE](https://open-meteo.com/en/docs/dmi-api)
+
 [GEM](https://open-meteo.com/en/docs/gem-api)
+
 [GFS GRAPES](https://open-meteo.com/en/docs/cma-api)
+
 [ACCESS-G](https://open-meteo.com/en/docs/bom-api)
-API Documentation
+
+## API Documentation
+
 The API endpoint /v1/forecast accepts a geographical coordinate, a list of weather variables and responds with a JSON hourly weather forecast for 7 days. Time always starts at 0:00 today and contains 168 hours. If &forecast_days=16 is set, up to 16 days of forecast can be returned. All URL parameters are listed below:
+
 | Parameter | Format | Required | Default | Description |
 |---|---|---|---|---|
 | latitude, longitude | Floating point | Yes | Geographical WGS84 coordinates of the location. Multiple coordinates can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return data for multiple locations the JSON output changes to a list of structures. CSV and XLSX formats add a column location_id. | |
 | elevation | Floating point | No | The elevation used for statistical downscaling. Per default, a
 |
+
 [time zone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)is supported. If auto is set as a time zone, the coordinates will be automatically resolved to the local time zone. For multiple coordinates, a comma separated list of timezones can be specified.forecast_minutely_15
+
 past_hours
+
 past_minutely_15
+
 end_date
+
 end_hour
+
 start_minutely_15
+
 end_minutely_15
+
 [similar elevation to the requested coordinates using a 90-meter digital elevation model](https://openmeteo.substack.com/p/improving-weather-forecasts-with). sea prefers grid-cells on sea. nearest selects the nearest possible grid-cell.[pricing](https://open-meteo.com/en/pricing)for more information.Additional optional URL parameters will be added. For API stability, no required parameters will be added in the future!
-Hourly Parameter Definition
+
+### Hourly Parameter Definition
+
 The parameter &hourly= accepts the following values. Most weather variables are given as an instantaneous value for the indicated hour. Some variables like precipitation are calculated from the preceding hour as an average or sum.
+
 | Variable | Valid time | Unit | Description |
 |---|---|---|---|
 | temperature_2m | Instant | °C (°F) | Air temperature at 2 meters above ground |
@@ -62,16 +151,27 @@ The parameter &hourly= accepts the following values. Most weather variables are 
 | vapour_pressure_deficit | Instant | kPa | Vapour Pressure Deficit (VPD) in kilopascal (kPa). For high VPD (>1.6), water transpiration of plants increases. For low VPD (<0.4), transpiration decreases |
 | cape | Instant | J/kg | Convective available potential energy. See
 |
+
 [FAO-56 Penman-Monteith equations](https://www.fao.org/3/x0490e/x0490e04.htm)ET₀ is calculated from temperature, wind speed, humidity and solar radiation. Unlimited soil water is assumed. ET₀ is commonly used to estimate the required irrigation for plants.soil_temperature_6cm
+
 soil_temperature_18cm
+
 soil_temperature_54cm
+
 soil_moisture_1_to_3cm
+
 soil_moisture_3_to_9cm
+
 soil_moisture_9_to_27cm
+
 soil_moisture_27_to_81cm
-15-Minutely Parameter Definition
+
+### 15-Minutely Parameter Definition
+
 The parameter &minutely_15= can be used to get 15-minutely data. This data is based on NOAA HRRR model for North America and DWD ICON-D2 and Météo-France AROME model for Central Europe. If 15-minutely data is requested for other regions data is interpolated from 1-hourly to 15-minutely.
+
 15-minutely data can be requested for other weather variables that are available for hourly data, but will use interpolation.
+
 | Variable | Valid time | Unit | HRRR | ICON-D2 | AROME |
 |---|---|---|---|---|---|
 | temperature_2m | Instant | °C (°F) | x | x | |
@@ -96,12 +196,17 @@ The parameter &minutely_15= can be used to get 15-minutely data. This data is ba
 | wind_gusts_10m | Preceding 15 min max | km/h (mph, m/s, knots) | x | ||
 | visibility | Instant | meters | x | x | |
 | weather_code | Instant | WMO code | x | x |
-Pressure Level Variables
+
+### Pressure Level Variables
+
 Pressure level variables do not have fixed altitudes. Altitude varies with atmospheric pressure. 1000 hPa is roughly between 60 and 160 meters above sea level. Estimated altitudes are given below. Altitudes are in meters above sea level (not above ground). For precise altitudes, geopotential_height can be used.
+
 | Level (hPa) | 1000 | 975 | 950 | 925 | 900 | 850 | 800 | 700 | 600 | 500 | 400 | 300 | 250 | 200 | 150 | 100 | 70 | 50 | 30 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Altitude | 110 m | 320 m | 500 m | 800 m | 1000 m | 1500 m | 1900 m | 3 km | 4.2 km | 5.6 km | 7.2 km | 9.2 km | 10.4 km | 11.8 km | 13.5 km | 15.8 km | 17.7 km | 19.3 km | 22 km |
+
 All pressure level have valid times of the indicated hour (instant).
+
 | Variable | Unit | Description |
 |---|---|---|
 | temperature_1000hPa temperature_975hPa, ... | °C (°F) | Air temperature at the specified pressure level. Air temperatures decrease linearly with pressure. |
@@ -110,11 +215,17 @@ All pressure level have valid times of the indicated hour (instant).
 | cloud_cover_1000hPa cloud_cover_975hPa, ... | % | Cloud cover at the specified pressure level. Cloud cover is approximated based on
 relative humidity using
 |
+
 wind_speed_975hPa, ...
+
 wind_direction_975hPa, ...
+
 geopotential_height_975hPa, ...
-Daily Parameter Definition
+
+### Daily Parameter Definition
+
 Aggregations are a simple 24 hour aggregation from hourly values. The parameter &daily= accepts the following values:
+
 | Variable | Unit | Description |
 |---|---|---|
 | temperature_2m_max temperature_2m_min | °C (°F) | Maximum and minimum daily air temperature at 2 meters above ground |
@@ -136,8 +247,12 @@ Aggregations are a simple 24 hour aggregation from hourly values. The parameter 
 | uv_index_max uv_index_clear_sky_max | Index | Daily maximum in UV Index starting from 0. uv_index_clear_sky_max assumes
 cloud free conditions. Please follow the
 |
-JSON Return Object
+
+### JSON Return Object
+
 On success a JSON object will be returned.
+
+` ````
 "latitude": 52.52,
 "longitude": 13.419,
 "elevation": 44.812,
@@ -152,6 +267,9 @@ On success a JSON object will be returned.
 "hourly_units": {
 "temperature_2m": "°C"
 }
+```
+
+
 | Parameter | Format | Description |
 |---|---|---|
 | latitude, longitude | Floating point | WGS84 of the center of the weather grid-cell which was used to generate this forecast. This coordinate might be a few kilometers away from the requested coordinate. |
@@ -163,12 +281,21 @@ On success a JSON object will be returned.
 | hourly_units | Object | For each selected weather variable, the unit will be listed here. |
 | daily | Object | For each selected daily weather variable, data will be returned as a floating point array. Additionally a time array will be returned with ISO8601 timestamps. |
 | daily_units | Object | For each selected daily weather variable, the unit will be listed here. |
-Errors
+
+### Errors
+
 In case an error occurs, for example a URL parameter is not correctly specified, a JSON error object is returned with a HTTP 400 status code.
+
+` ````
 "error": true,
 "reason": "Cannot initialize WeatherVariable from invalid String value tempeture_2m for key hourly"
-Weather variable documentation
-WMO Weather interpretation codes (WW)
+```
+
+
+## Weather variable documentation
+
+### WMO Weather interpretation codes (WW)
+
 | Code | Description |
 |---|---|
 | 0 | Clear sky |
@@ -184,4 +311,5 @@ WMO Weather interpretation codes (WW)
 | 85, 86 | Snow showers slight and heavy |
 | 95 * | Thunderstorm: Slight or moderate |
 | 96, 99 * | Thunderstorm with slight and heavy hail |
+
 (*) Thunderstorm forecast with hail is only available in Central Europe
