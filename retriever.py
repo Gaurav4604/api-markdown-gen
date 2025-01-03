@@ -1,4 +1,4 @@
-from langchain_chroma import Chroma
+
 from langchain.chains import RetrievalQA
 from langchain_ollama import OllamaLLM
 from langchain_ollama.embeddings import OllamaEmbeddings
@@ -20,34 +20,34 @@ retriever = vector_store.as_retriever()
 llm = OllamaLLM(model="llama3.2")
 
 
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.prompts import PromptTemplate
+# from langchain.chains import create_retrieval_chain
+# from langchain.chains.combine_documents import create_stuff_documents_chain
+# from langchain.prompts import PromptTemplate
 
-prompt_template = PromptTemplate(
-    input_variables=["context", "input"],
-    template=(
-        "Use the following context to answer the question.\n\n"
-        "Context:\n{context}\n\n"
-        "Question: {input}\n"
-        "Answer:"
-    ),
-)
+# prompt_template = PromptTemplate(
+#     input_variables=["context", "input"],
+#     template=(
+#         "Use the following context to answer the question.\n\n"
+#         "Context:\n{context}\n\n"
+#         "Question: {input}\n"
+#         "Answer:"
+#     ),
+# )
 
-combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=prompt_template)
+# combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=prompt_template)
 
-# Set up the RetrievalQA chain
-qa_chain = create_retrieval_chain(
-    retriever=retriever, combine_docs_chain=combine_docs_chain
-)
+# # Set up the RetrievalQA chain
+# qa_chain = create_retrieval_chain(
+#     retriever=retriever, combine_docs_chain=combine_docs_chain
+# )
 
-query = (
-    "Give me the API call query to get rain data for yesterday for Darwin, Australia"
-)
+# query = (
+#     "Give me the API call query to get rain data for yesterday for Darwin, Australia"
+# )
 
-# Get the response
-response = qa_chain.invoke({"input": query})
+# # Get the response
+# response = qa_chain.invoke({"input": query})
 
 
-print(response["answer"])
-print(response["context"])
+# print(response["answer"])
+# print(response["context"])

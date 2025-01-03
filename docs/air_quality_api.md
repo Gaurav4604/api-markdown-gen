@@ -1,7 +1,8 @@
 ---
 api-endpoint: https://air-quality-api.open-meteo.com/v1/air-quality
 date: 2024-01-01
-description: Get accurate forecasts for gases, particulate matter (PM), and pollen
+description:
+  Get accurate forecasts for gases, particulate matter (PM), and pollen
   with the Air Quality API. Access this powerful API for free for non-commercial use.
   Stay informed about air quality conditions and make informed decisions based on
   reliable data. Enhance your applications and services with real-time air quality
@@ -22,7 +23,6 @@ url: https://open-meteo.com/en/docs/air-quality-api
 pip install openmeteo-requests
 pip install requests-cache retry-requests numpy pandas
 ```
-
 
 #### Usage
 
@@ -66,13 +66,13 @@ hourly_dataframe = pd.DataFrame(data = hourly_data)
 print(hourly_dataframe)
 ```
 
-
 ## Data Sources
 
 Forecast is based on the 11 kilometer CAMS European air quality forecast and the 40 kilometer CAMS global atmospheric composition forecasts. The European and global domain are not coupled and may show different forecasts.
 
 | Data Set | Region | Spatial Resolution | Temporal Resolution | Data Availability | Update frequency |
-|---|---|---|---|---|---|
+| -------- | ------ | ------------------ | ------------------- | ----------------- | ---------------- |
+
 |
 
 [CAMS European Air Quality Reanalysis](https://ads.atmosphere.copernicus.eu/datasets/cams-europe-air-quality-reanalyses?tab=overview)
@@ -87,14 +87,15 @@ The API endpoint /v1/air-quality accepts a geographical coordinate, a list of we
 
 All URL parameters are listed below:
 
-| Parameter | Format | Required | Default | Description |
-|---|---|---|---|---|
-| latitude, longitude | Floating point | Yes | ||
-| hourly | String array | No | A list of weather variables which should be returned. Values can be comma separated, or multiple &hourly= parameter in the URL can be used. | |
-| current | String array | No | A list of variables to get current conditions. | |
-| domains | String | No | auto | Automatically combine both domains auto or specifically select the European cams_europe or global domain cams_global. |
-| timeformat | String | No | iso8601 | If format unixtime is selected, all time values are returned in UNIX epoch time in seconds. Please note that all timestamp are in GMT+0! For daily values with unix timestamps, please apply utc_offset_seconds again to get the correct date. |
-| timezone | String | No | GMT | If timezone is set, all timestamps are returned as local-time and data is
+| Parameter           | Format         | Required | Default                                                                                                                                     | Description                                                                                                                                                                                                                                    |
+| ------------------- | -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| latitude, longitude | Floating point | Yes      |                                                                                                                                             |                                                                                                                                                                                                                                                |
+| hourly              | String array   | No       | A list of weather variables which should be returned. Values can be comma separated, or multiple &hourly= parameter in the URL can be used. |                                                                                                                                                                                                                                                |
+| current             | String array   | No       | A list of variables to get current conditions.                                                                                              |                                                                                                                                                                                                                                                |
+| domains             | String         | No       | auto                                                                                                                                        | Automatically combine both domains auto or specifically select the European cams_europe or global domain cams_global.                                                                                                                          |
+| timeformat          | String         | No       | iso8601                                                                                                                                     | If format unixtime is selected, all time values are returned in UNIX epoch time in seconds. Please note that all timestamp are in GMT+0! For daily values with unix timestamps, please apply utc_offset_seconds again to get the correct date. |
+| timezone            | String         | No       | GMT                                                                                                                                         | If timezone is set, all timestamps are returned as local-time and data is                                                                                                                                                                      |
+
 returned starting at 00:00 local-time. Any time zone name from the
 |
 
@@ -106,17 +107,18 @@ end_hour
 
 [similar elevation to the requested coordinates using a 90-meter digital elevation model](https://openmeteo.substack.com/p/improving-weather-forecasts-with). sea prefers grid-cells on sea. nearest selects the nearest possible grid-cell.[pricing](https://open-meteo.com/en/pricing)for more information.### Hourly Parameter Definition
 
-| Variable | Valid time | Unit | Description |
-|---|---|---|---|
-| pm10 pm2_5 | Instant | μg/m³ | Particulate matter with diameter smaller than 10 µm (PM10) and smaller than
-2.5 µm (PM2.5) close to surface (10 meter above ground) |
-| carbon_monoxide nitrogen_dioxide sulphur_dioxide ozone | Instant | μg/m³ | Atmospheric gases close to surface (10 meter above ground) |
-| carbon_dioxide | Instant | ppm | CO2 close to surface (10 meter above ground) |
-| ammonia | Instant | μg/m³ | Ammonia concentration. Only available for Europe. |
-| aerosol_optical_depth | Instant | Dimensionless | Aerosol optical depth at 550 nm of the entire atmosphere to indicate haze. |
-| methane | Instant | μg/m³ | Methane close to surface (10 meter above ground) |
-| dust | Instant | μg/m³ | Saharan dust particles close to surface level (10 meter above ground). |
-| uv_index uv_index_clear_sky | Instant | Index | UV index considering clouds and clear sky. See
+| Variable                                                | Valid time | Unit          | Description                                                                 |
+| ------------------------------------------------------- | ---------- | ------------- | --------------------------------------------------------------------------- |
+| pm10 pm2_5                                              | Instant    | μg/m³         | Particulate matter with diameter smaller than 10 µm (PM10) and smaller than |
+| 2.5 µm (PM2.5) close to surface (10 meter above ground) |
+| carbon_monoxide nitrogen_dioxide sulphur_dioxide ozone  | Instant    | μg/m³         | Atmospheric gases close to surface (10 meter above ground)                  |
+| carbon_dioxide                                          | Instant    | ppm           | CO2 close to surface (10 meter above ground)                                |
+| ammonia                                                 | Instant    | μg/m³         | Ammonia concentration. Only available for Europe.                           |
+| aerosol_optical_depth                                   | Instant    | Dimensionless | Aerosol optical depth at 550 nm of the entire atmosphere to indicate haze.  |
+| methane                                                 | Instant    | μg/m³         | Methane close to surface (10 meter above ground)                            |
+| dust                                                    | Instant    | μg/m³         | Saharan dust particles close to surface level (10 meter above ground).      |
+| uv_index uv_index_clear_sky                             | Instant    | Index         | UV index considering clouds and clear sky. See                              |
+
 |
 
 birch_pollen
@@ -170,7 +172,8 @@ On success a JSON object will be returned.
 "hourly_units": {
 "pm10": "μg/m³"
 },
-```
+
+`````
 
 
 | Parameter | Format | Description |
@@ -187,11 +190,4 @@ On success a JSON object will be returned.
 ` ````
 "error": true,
 "reason": "Cannot initialize WeatherVariable from invalid String value tempeture_2m for key hourly"
-```
-
-
-## Citation & Acknowledgement
-
-METEO FRANCE, Institut national de l'environnement industriel et des risques (Ineris), Aarhus University, Norwegian Meteorological Institute (MET Norway), Jülich Institut für Energie- und Klimaforschung (IEK), Institute of Environmental Protection – National Research Institute (IEP-NRI), Koninklijk Nederlands Meteorologisch Instituut (KNMI), Nederlandse Organisatie voor toegepast-natuurwetenschappelijk onderzoek (TNO), Swedish Meteorological and Hydrological Institute (SMHI), Finnish Meteorological Institute (FMI), Italian National Agency for New Technologies, Energy and Sustainable Economic Development (ENEA) and Barcelona Supercomputing Center (BSC) (2022): CAMS European air quality forecasts, ENSEMBLE data. Copernicus Atmosphere Monitoring Service (CAMS) Atmosphere Data Store (ADS). (Updated twice daily).
-
-All users of Open-Meteo data must provide a clear attribution to [CAMS ENSEMBLE data provider](https://confluence.ecmwf.int/display/CKB/CAMS+Regional%3A+European+air+quality+analysis+and+forecast+data+documentation\#CAMSRegional:Europeanairqualityanalysisandforecastdatadocumentation-Howtoacknowledge,citeandrefertothedata) as well as a reference to Open-Meteo.
+`````
