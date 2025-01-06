@@ -1,0 +1,9 @@
+- name: latitude, longitude
+  in: query
+  required: true
+  description:
+    Geographical WGS84 coordinates of the location. Multiple coordinates
+    can be comma , separated. Up to 100 coordinates can be requested at once. Example
+    for multiple coordinates.
+  schema:
+    type: string

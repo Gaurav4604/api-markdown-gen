@@ -11,7 +11,7 @@ def markdown_to_plain_text(md_content):
     return soup.get_text()
 
 
-doc = MarkdownAnalyzer("docs/climate_api.md")
+doc = MarkdownAnalyzer("docs/marine_weather_api.md")
 
 tables = doc.identify_tables().get("Table")
 

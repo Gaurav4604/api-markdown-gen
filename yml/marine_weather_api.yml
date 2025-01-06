@@ -1,0 +1,153 @@
+- name: latitude, longitude
+  in: query
+  required: true
+  description:
+    Geographical WGS84 coordinates of the location. Multiple coordinates
+    can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
+    data for multiple locations the JSON output changes to a list of structures. CSV
+    and XLSX formats add a column location_id.
+  schema:
+    type: string
+- name: hourly
+  in: query
+  required: false
+  description:
+    A list of weather variables which should be returned. Values can be
+    comma separated, or multiple &hourly= parameter in the URL can be used.
+  explode: false
+  schema:
+    type: array
+    items:
+      type: string
+      enum:
+        - value: wave_height, wind_wave_height, swell_wave_height
+          unit: Meter
+          description:
+            Wave height of significant mean, wind and swell waves. Wave directions
+            are always reported as the direction the waves come from. 0° = From north
+            towards south; 90° = From east
+        - value: wave_direction, wind_wave_direction, swell_wave_direction
+          unit: °
+          description: Mean direction of mean, wind and swell waves
+        - value: wave_period, wind_wave_period, swell_wave_period
+          unit: Seconds
+          description: Period between mean, wind and swell waves.
+        - value: wind_wave_peak_period, swell_wave_peak_period
+          unit: Seconds
+          description: Peak period between wind and swell waves.
+        - value: ocean_current_velocity
+          unit: km/h (mph, m/s, knots)
+          description: Velocity of ocean current considering Eulerian, Waves and Tides.
+        - value: ocean_current_direction
+          unit: °
+          description:
+            Direction following the flow of the current. E.g. where the current
+            is heading towards. 0° = Going north; 90° = Towards east.
+- name: daily
+  in: query
+  required: false
+  description:
+    A list of daily weather variable aggregations which should be returned.
+    Values can be comma separated, or multiple &daily= parameter in the URL can be
+    used. If daily weather variables are specified, parameter timezone is required.
+  explode: false
+  schema:
+    type: array
+    items:
+      type: string
+      enum:
+        - value: wave_height_max, wind_wave_height_max, swell_wave_height_max
+          unit: Meter
+          description: Maximum wave height on a given day for mean, wind and swell waves
+        - value: wave_direction_dominant, wind_wave_direction_dominant, swell_wave_direction_dominant
+          unit: °
+          description: Dominant wave direction of mean, wind and swell waves
+        - value: wave_period_max, wind_wave_period_max, swell_wave_period_max
+          unit: Seconds
+          description: Maximum wave period of mean, wind and swell
+        - value: wind_wave_peak_period_max, swell_wave_peak_period_max
+          unit: Seconds
+          description: Maximum peak period between wind and swell waves.
+    default: null
+- name: current
+  in: query
+  required: false
+  description: A list of variables to get current conditions.
+  explode: false
+  schema:
+    type: array
+    items:
+      type: string
+      enum: []
+    default: null
+- name: timeformat
+  in: query
+  required: false
+  description:
+    If format unixtime is selected, all time values are returned in UNIX
+    epoch time in seconds. Please note that all timestamp are in GMT+0! For daily
+    values with unix timestamps, please apply utc_offset_seconds again to get the
+    correct date.
+  schema:
+    type: string
+    default: iso8601
+- name: timezone
+  in: query
+  required: false
+  description:
+    If timezone is set, all timestamps are returned as local-time and data
+    is returned starting at 00:00 local-time. Any time zone name from the time zone
+    database is supported. If auto is set as a time zone, the coordinates will be
+    automatically resolved to the local time zone. For multiple coordinates, a comma
+    separated list of timezones can be specified.
+  schema:
+    type: string
+    default: GMT
+- name: past_days
+  in: query
+  required: false
+  description:
+    If past_days is set, yesterday or the day before yesterday data are
+    also returned.
+  schema:
+    type: string
+    default: "0"
+- name: forecast_days
+  in: query
+  required: false
+  description: Per default, 7 days are returned. Up to 8 days of forecast are possible.
+  schema:
+    type: string
+    default: "5"
+- name: forecast_hours, past_hours
+  in: query
+  required: false
+  description:
+    Similar to forecast_days, the number of timesteps of hourly data can
+    controlled. Instead of using the current day as a reference, the current hour
+    is used.
+  schema:
+    type: string
+- name: start_date, end_date
+  in: query
+  required: false
+  description:
+    The time interval to get weather data. A day must be specified as an
+    ISO8601 date (e.g. 2022-06-30).
+  schema:
+    type: string
+- name: start_hour, end_hour
+  in: query
+  required: false
+  description:
+    The time interval to get weather data for hourly data. Time must be
+    specified as an ISO8601 date (e.g. 2022-06-30T12:00).
+  schema:
+    type: string
+- name: length_unit
+  in: query
+  required: false
+  description: Options metric and imperial
+  schema:
+    type: string
+    default: metric

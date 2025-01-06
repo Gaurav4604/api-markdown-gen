@@ -293,8 +293,8 @@ def convert_markdown_tables_to_yaml(file_path: str):
 # 4. Putting it all together: run the conversion
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    file_path = "docs/weather_forecast_api.md"  # or wherever your markdown is
+    file_path = "docs/historical_weather_api.md"  # or wherever your markdown is
     final_yaml = convert_markdown_tables_to_yaml(file_path)
-    with open("yml/weather_forecast_api.yml", "wb") as f:
+    with open("yml/historical_weather_api.yml", "wb") as f:
         f.write(final_yaml)
         f.close()
