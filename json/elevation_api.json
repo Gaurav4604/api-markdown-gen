@@ -1,0 +1,17 @@
+[
+  {
+    "header": "API Documentation",
+    "data": "\nThe API endpoint /v1/elevation accepts one or multiple geographical coordinate and returns\nthe terrain elevation for those points.\n\nData is based on the [Copernicus DEM 2021 release GLO-90](https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model) with 90 meters resolution. The GLO-90 dataset is available worldwide with a free license.\n\nAll URL parameters are listed below:\n\n| Parameter           | Format               | Required | Default | Description                                                                                                                                                                                                                                                           |\n| ------------------- | -------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| latitude, longitude | Floating point array | Yes      |         | Geographical WGS84 coordinates of the location. Multiple coordinates can be comma , separated. Up to 100 coordinates can be requested at once. Example for [multiple coordinates](https://api.open-meteo.com/v1/elevation?latitude=52.52,48.85&longitude=13.41,2.35). |\n| apikey              | String               | No       |         | Only required to commercial use to access reserved API resources for customers. The server URL requires the prefix customer-. See [pricing](/en/pricing \"Pricing information to use the weather API commercially\") for more information.                              |\n\nAdditional optional URL parameters will be added. For API stability, no required parameters will\nbe added in the future!\n\n### JSON Return Object"
+  },
+  {
+    "header": "JSON Return Object",
+    "data": "\nOn success a JSON object is returned with just one attribute elevation. It is\nalways an array, even if only one coordinate is requested.\n\n```\n\n  \"elevation\": [38.0]\n\n```\n\n### Errors"
+  },
+  {
+    "header": "Errors",
+    "data": "\nIn case an error occurs, for example a URL parameter is not correctly specified, a JSON error\nobject is returned with a HTTP 400 status code.\n\n```\n\n  \"error\":true,\n  \"reason\":\"Latitude must be in range of -90 to 90\u00b0. Given: 522.52.\"\n\n```\n\n## Citation & Acknowledgement"
+  },
+  {
+    "api-endpoint": "/en/terms"
+  }
+]
