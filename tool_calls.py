@@ -6,7 +6,9 @@ import os
 import geocoder
 from datetime import datetime
 from timezonefinder import TimezoneFinder
-from urllib.parse import urlparse, parse_qs
+import utils
+import requests
+import json
 
 
 class TimeZone(BaseModel):
@@ -27,10 +29,11 @@ class Query(BaseModel):
     api_with_params: str
 
 
-class QueryWithMeta(BaseModel):
-    api_with_params: str
+class Response(BaseModel):
+    response: str
     file: str
     question_for_doc: str
+    query: str
 
 
 directory = "yml"
@@ -135,6 +138,7 @@ def get_timezone(latlng: list[int]) -> str:
         options={
             "temperature": 0.1,
             "low_vram": True,
+            "num_ctx": 1024,
         },
         format=TimeZone.model_json_schema(),
     )
@@ -220,7 +224,12 @@ so include the parameters responsible according to the question
 
 
 def query_generation_prompt(
-    doc, api_endpoint, latlng, current_datetime, timezone, question
+    doc: str,
+    api_endpoint: str,
+    latlng: list[int],
+    current_datetime: datetime,
+    timezone: str,
+    question: str,
 ) -> str:
     prompt = """
 <document> 
@@ -237,8 +246,8 @@ which provides the API endpoint for the document and target the location provide
         {}
     <latitude-longitude>
     <date-time>
-        today's datetime: {}
-        NOTE: if you use date-time for start_date, specify end_date as well 
+        today's date: {}
+        current time: {}
     </date-time>
     <timezone>
         {}
@@ -247,33 +256,39 @@ which provides the API endpoint for the document and target the location provide
 
 Question: {}
     """.format(
-        doc, api_endpoint, latlng, current_datetime, timezone, question
+        doc,
+        api_endpoint,
+        latlng,
+        current_datetime.strftime("%Y-%m-%d"),
+        current_datetime.strftime("%H:%M:%S"),
+        timezone,
+        question,
     )
     return prompt
 
 
-def generate_api_calls(
+def generate_and_execute_api_calls(
     selected_docs: list[Doc],
     latlng: list[int],
     current_datetime: datetime,
     timezone: str,
-) -> list[QueryWithMeta]:
+) -> list[Response]:
     """
     Creates API queries associated with the docs provided
-
+    And Executes Them
     Args:
         selected_docs (list[Doc]): list of documents for which the API calls need to be generated
         latlng (list[int]): a list containing 2 elements, in order latitude and longitude associated to the location
         current_datetime (datetime): datetime information of the location
         timezone: the timezone in which the location exists
     Returns:
-      list[API_Query]: A list of API_Query objects, with each object containing a API call generated for the Doc associated to it
+      list[Response]: A list of Response objects, with each object containing a Response generated for the Question associated to it
     """
-    queries: list[QueryWithMeta] = []
+    queries: list[Response] = []
     for doc in selected_docs:
         target = list(filter(lambda x: doc.file in x["meta"]["filename"], yml_files))[0]
         res = ollama.chat(
-            model="granite3.1-dense",
+            model="gemma2",
             messages=[
                 {"role": "system", "content": query_generation_system},
                 {
@@ -287,10 +302,6 @@ def generate_api_calls(
                         doc.question_for_doc,
                     ),
                 },
-                {
-                    "role": "user",
-                    "content": "if the generated query uses start_date, add end_date as well",
-                },
             ],
             format=Query.model_json_schema(),
             options={
@@ -302,39 +313,52 @@ def generate_api_calls(
         )
 
         query = Query.model_validate_json(res["message"]["content"]).api_with_params
-        parsed_url = urlparse(query)
 
-        query_params = parse_qs(parsed_url.query)
+        query = utils.fix_date_time_value(query)
+        query = utils.fix_start_date_incompletion(query)
+        query = utils.fix_forecast_day_inconsistency(query)
 
-        # Check if start_date exists in query_params but end_date doesn't
-        if "start_date" in query_params and "end_date" not in query_params:
-            # Add end_date parameter with the same value as start_date
-            query_params["end_date"] = [query_params["start_date"][0]]
+        api_response = requests.get(query)
 
-            # Reconstruct URL with new params
-            url_with_end_date = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{'&'.join(f'{key}={value[0]}' for key, value in query_params.items())}"
-
-            query = url_with_end_date
-
-        queries.append(
-            {"query": query, "file": doc.file, "question_for_doc": doc.question_for_doc}
-        )
+        if api_response.status_code == 200:
+            res = json.dumps(api_response.json(), indent=2)
+            queries.append(
+                Response(
+                    response=res,
+                    file=doc.file,
+                    question_for_doc=doc.question_for_doc,
+                    query=query,
+                )
+            )
+        else:
+            queries.append(
+                Response(
+                    response="",
+                    file=doc.file,
+                    question_for_doc=doc.question_for_doc,
+                    query=query,
+                )
+            )
 
     return queries
 
 
 functions = {
     "generate_target_docs_for_query": generate_target_docs_for_query,
-    "generate_api_calls": generate_api_calls,
+    "generate_and_execute_api_calls": generate_and_execute_api_calls,
 }
 
-q_outlier = "in the next seven days, when would be a good time to swim, in the ocean, in Adelaide?"
-q = "will tomorrow afternoon be a nice time to swim in the ocean in Adelaide?"
+q1 = "in the next seven days, when would be a good time to swim, in the ocean, in Adelaide?"
+q2 = "will tomorrow afternoon be a nice time to swim in the ocean in Adelaide?"
+q3 = "should I wear a hat tomorrow?"
+q4 = "is it gonna be sweater weather soon?"
+
+q_used = q4
 
 messages = [
     {
         "role": "user",
-        "content": q_outlier,
+        "content": q_used,
     }
 ]
 
@@ -346,12 +370,28 @@ print("Date data: ", date_data)
 tz = get_timezone(latlng)
 print("Timezone data: ", tz)
 
-docs = generate_target_docs_for_query(
-    "will tomorrow afternoon be a nice time to swim in the ocean in Adelaide?"
-)
+docs = generate_target_docs_for_query(q_used)
 print("Selected Docs: ", docs)
-api_queries = generate_api_calls(docs, latlng, date_data, tz)
-print("Generated API Queries: ", api_queries)
+api_queries = generate_and_execute_api_calls(docs, latlng, date_data, tz)
+print("Generated API Responses: ", api_queries)
+
+res = ollama.chat(
+    model="marco-o1",
+    messages=[
+        {
+            "role": "user",
+            "content": """
+    Based on the Responses: {}
+    Answer the initial Question: {}
+    while pointing to response data you've taken as factors for the result""".format(
+                api_queries, q_used
+            ),
+        },
+    ],
+    options={"temperature": 0.1, "num_ctx": 8192},
+)
+
+print(res["message"]["content"])
 
 
 # system_main = """
@@ -400,5 +440,3 @@ print("Generated API Queries: ", api_queries)
 
 # else:
 #     print("No tool calls returned from model")
-
-# https://marine-api.open-meteo.com/v1/marine?latitude=34.93&longitude=138.6&hourly=wave_height,ocean_current_velocity&forecast_days=1&start_date=2025-01-08&timezone=Australia/Sydney&length_unit=metric&end_date=2025-01-09
