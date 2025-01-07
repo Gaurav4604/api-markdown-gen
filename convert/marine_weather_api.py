@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 from mrkdwn_analysis import MarkdownAnalyzer
 
 
+class NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
+
+
 # --------------------------------------------------------------------------
 # 1. Helper function to convert Markdown cells to plain text
 # --------------------------------------------------------------------------
@@ -50,27 +55,6 @@ def hourly_param_generator(
         param_entry["schema"]["default"] = default_val
 
     return param_entry
-
-
-def current_param_generator(
-    param_name, required, description, enum_items=None, default_val=None
-):
-    """
-    Generates a parameter entry for 'current' param, of type 'string array',
-    with enumerations as objects: { "value": ..., "unit": ... }.
-    """
-    return {
-        "name": param_name,
-        "in": "query",
-        "required": required,
-        "description": description or "",
-        "explode": False,
-        "schema": {
-            "type": "array",
-            "items": {"type": "string", "enum": enum_items or []},
-            "default": default_val if default_val else None,
-        },
-    }
 
 
 def daily_param_generator(
@@ -218,11 +202,11 @@ def convert_markdown_tables_to_yaml(file_path: str):
                     default_val=default_val,
                 )
             elif param_name.lower() == "current":
-                param_entry = current_param_generator(
+                param_entry = hourly_param_generator(
                     param_name=param_name,
                     required=required,
                     description=description,
-                    enum_items=current_enum_items,
+                    enum_items=hourly_enum_items,
                     default_val=default_val,
                 )
             elif param_name.lower() == "daily":
@@ -280,6 +264,7 @@ def convert_markdown_tables_to_yaml(file_path: str):
     # Convert the constructed parameter list to a YAML string
     yaml_output = yaml.dump(
         parameters_yaml,
+        Dumper=NoAliasDumper,
         sort_keys=False,
         default_flow_style=False,
         allow_unicode=True,
@@ -293,8 +278,24 @@ def convert_markdown_tables_to_yaml(file_path: str):
 # 4. Putting it all together: run the conversion
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    file_path = "docs/marine_weather_api.md"  # or wherever your markdown is
-    final_yaml = convert_markdown_tables_to_yaml(file_path)
-    with open("yml/marine_weather_api.yml", "wb") as f:
-        f.write(final_yaml)
+    # file_path = "docs/marine_weather_api.md"
+    # final_yaml = convert_markdown_tables_to_yaml(file_path)
+    yml = None
+    with open("yml/marine_weather_api.yml", "r", encoding="utf-8") as f:
+        yml = yaml.dump(
+            {
+                "api-endpoint": "https://marine-api.open-meteo.com/v1/marine",
+                "parameters": yaml.safe_load(f),
+                "tags": ["marine-conditions"],
+                "file": "marine_weather_api.yml",
+            },
+            Dumper=NoAliasDumper,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=True,
+            indent=2,
+        )
+        f.close()
+    with open("yml/marine_weather_api.yml", "w", encoding="utf-8") as f:
+        f.write(yml)
         f.close()

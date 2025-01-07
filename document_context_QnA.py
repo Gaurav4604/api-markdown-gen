@@ -23,9 +23,6 @@ Question: {}
     return prompt
 
 
-import frontmatter
-
-
 helper = """
 <api-info>
  {}

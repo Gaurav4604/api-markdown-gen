@@ -1,160 +1,195 @@
-- name: latitude, longitude
-  in: query
-  required: true
-  description: Geographical WGS84 coordinates of the location. Multiple coordinates
-    can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
-    data for multiple locations the JSON output changes to a list of structures. CSV
-    and XLSX formats add a column location_id.
-  schema:
-    type: string
-- name: hourly
-  in: query
-  required: false
-  description: A list of weather variables which should be returned. Values can be
-    comma separated, or multiple &hourly= parameter in the URL can be used.
-  explode: false
-  schema:
-    type: array
-    items:
+api-endpoint: https://air-quality-api.open-meteo.com/v1/air-quality
+parameters:
+  - name: latitude, longitude
+    in: query
+    required: true
+    description:
+      Geographical WGS84 coordinates of the location. Multiple coordinates
+      can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
+      data for multiple locations the JSON output changes to a list of structures. CSV
+      and XLSX formats add a column location_id.
+    schema:
       type: string
-      enum:
-      - value: pm10pm2_5
-        unit: μg/m³
-        description: Particulate matter with diameter smaller than 10 µm (PM10) and
-          smaller than 2.5 µm (PM2.5) close to surface (10 meter above ground)
-      - value: carbon_monoxidenitrogen_dioxidesulphur_dioxideozone
-        unit: μg/m³
-        description: Atmospheric gases close to surface (10 meter above ground)
-      - value: carbon_dioxide
-        unit: ppm
-        description: CO2 close to surface (10 meter above ground)
-      - value: ammonia
-        unit: μg/m³
-        description: Ammonia concentration. Only available for Europe.
-      - value: aerosol_optical_depth
-        unit: Dimensionless
-        description: Aerosol optical depth at 550 nm of the entire atmosphere to indicate
-          haze.
-      - value: methane
-        unit: μg/m³
-        description: Methane close to surface (10 meter above ground)
-      - value: dust
-        unit: μg/m³
-        description: Saharan dust particles close to surface level (10 meter above
-          ground).
-      - value: uv_indexuv_index_clear_sky
-        unit: Index
-        description: UV index considering clouds and clear sky. See ECMWF UV Index
-          recommendation for more information
-      - value: alder_pollenbirch_pollengrass_pollenmugwort_pollenolive_pollenragweed_pollen
-        unit: Grains/m³
-        description: Pollen for various plants. Only available in Europe as provided
-          by CAMS European Air Quality forecast.
-      - value: european_aqieuropean_aqi_pm2_5european_aqi_pm10european_aqi_nitrogen_dioxideeuropean_aqi_ozoneeuropean_aqi_sulphur_dioxide
-        unit: European AQI
-        description: European Air Quality Index (AQI) calculated for different particulate
-          matter and gases individually. The consolidated european_aqi returns the
-          maximum of all individual indices. Ranges from 0-20 (good), 20-40 (fair),
-          40-60 (moderate), 60-80 (poor), 80-100 (very poor) and exceeds 100 for extremely
-          poor conditions.
-      - value: us_aqius_aqi_pm2_5us_aqi_pm10us_aqi_nitrogen_dioxideus_aqi_ozoneus_aqi_sulphur_dioxideus_aqi_carbon_monoxide
-        unit: U.S. AQI
-        description: United States Air Quality Index (AQI) calculated for different
-          particulate matter and gases individually. The consolidated us_aqi returns
-          the maximum of all individual indices. Ranges from 0-50 (good), 51-100 (moderate),
-          101-150 (unhealthy for sensitive groups), 151-200 (unhealthy), 201-300 (very
-          unhealthy) and 301-500 (hazardous).
-- name: current
-  in: query
-  required: false
-  description: A list of variables to get current conditions.
-  explode: false
-  schema:
-    type: array
-    items:
+  - name: hourly
+    in: query
+    required: false
+    description:
+      A list of weather variables which should be returned. Values can be
+      comma separated, or multiple &hourly= parameter in the URL can be used.
+    explode: false
+    schema:
+      type: array
+      items:
+        type: string
+        enum:
+          - value: pm10, pm2_5
+            unit: μg/m³
+            description:
+              Particulate matter with diameter smaller than 10 µm (PM10) and
+              smaller than 2.5 µm (PM2.5) close to surface (10 meter above ground)
+          - value: carbon_monoxide, nitrogen_dioxide, sulphur_dioxide, ozone
+            unit: μg/m³
+            description: Atmospheric gases close to surface (10 meter above ground)
+          - value: carbon_dioxide
+            unit: ppm
+            description: CO2 close to surface (10 meter above ground)
+          - value: ammonia
+            unit: μg/m³
+            description: Ammonia concentration. Only available for Europe.
+          - value: aerosol_optical_depth
+            unit: Dimensionless
+            description:
+              Aerosol optical depth at 550 nm of the entire atmosphere to indicate
+              haze.
+          - value: methane
+            unit: μg/m³
+            description: Methane close to surface (10 meter above ground)
+          - value: dust
+            unit: μg/m³
+            description:
+              Saharan dust particles close to surface level (10 meter above
+              ground).
+          - value: uv_index, uv_index_clear_sky
+            unit: Index
+            description:
+              UV index considering clouds and clear sky. See ECMWF UV Index
+              recommendation for more information
+  - name: current
+    in: query
+    required: false
+    description: A list of variables to get current conditions.
+    explode: false
+    schema:
+      type: array
+      items:
+        type: string
+        enum:
+          - value: pm10, pm2_5
+            unit: μg/m³
+            description:
+              Particulate matter with diameter smaller than 10 µm (PM10) and
+              smaller than 2.5 µm (PM2.5) close to surface (10 meter above ground)
+          - value: carbon_monoxide, nitrogen_dioxide, sulphur_dioxide, ozone
+            unit: μg/m³
+            description: Atmospheric gases close to surface (10 meter above ground)
+          - value: carbon_dioxide
+            unit: ppm
+            description: CO2 close to surface (10 meter above ground)
+          - value: ammonia
+            unit: μg/m³
+            description: Ammonia concentration. Only available for Europe.
+          - value: aerosol_optical_depth
+            unit: Dimensionless
+            description:
+              Aerosol optical depth at 550 nm of the entire atmosphere to indicate
+              haze.
+          - value: methane
+            unit: μg/m³
+            description: Methane close to surface (10 meter above ground)
+          - value: dust
+            unit: μg/m³
+            description:
+              Saharan dust particles close to surface level (10 meter above
+              ground).
+          - value: uv_index, uv_index_clear_sky
+            unit: Index
+            description:
+              UV index considering clouds and clear sky. See ECMWF UV Index
+              recommendation for more information
+  - name: domains
+    in: query
+    required: false
+    description:
+      Automatically combine both domains auto or specifically select the
+      European cams_europe or global domain cams_global.
+    schema:
       type: string
-      enum: *id001
-- name: domains
-  in: query
-  required: false
-  description: Automatically combine both domains auto or specifically select the
-    European cams_europe or global domain cams_global.
-  schema:
-    type: string
-    default: auto
-- name: timeformat
-  in: query
-  required: false
-  description: If format unixtime is selected, all time values are returned in UNIX
-    epoch time in seconds. Please note that all timestamp are in GMT+0! For daily
-    values with unix timestamps, please apply utc_offset_seconds again to get the
-    correct date.
-  schema:
-    type: string
-    default: iso8601
-- name: timezone
-  in: query
-  required: false
-  description: If timezone is set, all timestamps are returned as local-time and data
-    is returned starting at 00:00 local-time. Any time zone name from the time zone
-    database is supported. If auto is set as a time zone, the coordinates will be
-    automatically resolved to the local time zone. For multiple coordinates, a comma
-    separated list of timezones can be specified.
-  schema:
-    type: string
-    default: GMT
-- name: past_days
-  in: query
-  required: false
-  description: If past_days is set, yesterday or the day before yesterday data are
-    also returned.
-  schema:
-    type: string
-    default: '0'
-- name: forecast_days
-  in: query
-  required: false
-  description: Per default, 5 days are returned. Up to 7 days of forecast are possible.
-  schema:
-    type: string
-    default: '5'
-- name: forecast_hourspast_hours
-  in: query
-  required: false
-  description: Similar to forecast_days, the number of timesteps of hourly data can
-    controlled. Instead of using the current day as a reference, the current hour
-    is used.
-  schema:
-    type: string
-- name: start_dateend_date
-  in: query
-  required: false
-  description: The time interval to get weather data. A day must be specified as an
-    ISO8601 date (e.g. 2022-06-30).
-  schema:
-    type: string
-- name: start_hourend_hour
-  in: query
-  required: false
-  description: The time interval to get weather data for hourly data. Time must be
-    specified as an ISO8601 date (e.g. 2022-06-30T12:00).
-  schema:
-    type: string
-- name: cell_selection
-  in: query
-  required: false
-  description: Set a preference how grid-cells are selected. The default land finds
-    a suitable grid-cell on land with similar elevation to the requested coordinates
-    using a 90-meter digital elevation model. sea prefers grid-cells on sea. nearest
-    selects the nearest possible grid-cell.
-  schema:
-    type: string
-    default: nearest
-- name: apikey
-  in: query
-  required: false
-  description: Only required to commercial use to access reserved API resources for
-    customers. The server URL requires the prefix customer-. See pricing for more
-    information.
-  schema:
-    type: string
+      default: auto
+  - name: timeformat
+    in: query
+    required: false
+    description:
+      If format unixtime is selected, all time values are returned in UNIX
+      epoch time in seconds. Please note that all timestamp are in GMT+0! For daily
+      values with unix timestamps, please apply utc_offset_seconds again to get the
+      correct date.
+    schema:
+      type: string
+      default: iso8601
+  - name: timezone
+    in: query
+    required: false
+    description:
+      If timezone is set, all timestamps are returned as local-time and data
+      is returned starting at 00:00 local-time. Any time zone name from the time zone
+      database is supported. If auto is set as a time zone, the coordinates will be
+      automatically resolved to the local time zone. For multiple coordinates, a comma
+      separated list of timezones can be specified.
+    schema:
+      type: string
+      default: GMT
+  - name: past_days
+    in: query
+    required: false
+    description:
+      If past_days is set, yesterday or the day before yesterday data are
+      also returned.
+    schema:
+      type: string
+      default: "0"
+  - name: forecast_days
+    in: query
+    required: false
+    description: Per default, 5 days are returned. Up to 7 days of forecast are possible.
+    schema:
+      type: string
+      default: "5"
+  - name: forecast_hours, past_hours
+    in: query
+    required: false
+    description:
+      Similar to forecast_days, the number of timesteps of hourly data can
+      controlled. Instead of using the current day as a reference, the current hour
+      is used.
+    schema:
+      type: string
+  - name: start_date, end_date
+    in: query
+    required: false
+    description:
+      The time interval to get weather data. A day must be specified as an
+      ISO8601 date (e.g. 2022-06-30).
+    schema:
+      type: string
+  - name: start_hour, end_hour
+    in: query
+    required: false
+    description:
+      The time interval to get weather data for hourly data. Time must be
+      specified as an ISO8601 date (e.g. 2022-06-30T12:00).
+    schema:
+      type: string
+meta:
+  tags:
+    - atmospheric-gases
+    - particulate-matter
+    - UV-index
+    - aerosol-optical-depth
+    - methane-concentration
+    - saharan-dust
+    - ammonia-concentration
+    - carbon-monoxide
+    - nitrogen-dioxide
+    - sulphur-dioxide
+    - ozone
+    - carbon-dioxide
+    - air-quality-indicators
+  description:
+    This document outlines the parameters for an API call related to weather
+    and air quality data, including various environmental variables such as particulate
+    matter, atmospheric gases, UV index, aerosol optical depth, methane concentration,
+    saharan dust, ammonia concentration, carbon monoxide, nitrogen dioxide, sulphur
+    dioxide, ozone, and carbon dioxide. It also covers forecasting options for up
+    to 7 days, historical data retrieval, time zone adjustments, and date formats
+    like ISO8601.
+  filename: yml/air_quality_api.yml

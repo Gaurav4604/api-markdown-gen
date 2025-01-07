@@ -1,66 +1,78 @@
-- name: latitude, longitude
-  in: query
-  required: true
-  description:
-    Geographical WGS84 coordinates of the location. Multiple coordinates
-    can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
-    data for multiple locations the JSON output changes to a list of structures. CSV
-    and XLSX formats add a column location_id.
-  schema:
-    type: string
-- name: daily
-  in: query
-  required: false
-  description:
-    A list of weather variables which should be returned. Values can be
-    comma separated, or multiple &daily= parameter in the URL can be used.
-  explode: false
-  schema:
-    type: array
-    items:
+api-endpoint: https://flood-api.open-meteo.com/v1/flood
+parameters:
+  - name: latitude, longitude
+    in: query
+    required: true
+    description:
+      Geographical WGS84 coordinates of the location. Multiple coordinates
+      can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
+      data for multiple locations the JSON output changes to a list of structures. CSV
+      and XLSX formats add a column location_id.
+    schema:
       type: string
-      enum:
-        - value: river_discharge
-          unit: m³/s
-          description: Daily river discharge rate in m³/s
-        - value:
-            river_discharge_mean, river_discharge_median, river_discharge_max,
-            river_discharge_min, river_discharge_p25, river_discharge_p75
-          unit: m³/s
-          description:
-            Statistical analysis from ensemble members for river discharge
-            rate in m³/s. Only available for forecasts and not for consolidated historical
-            data.
-- name: timeformat
-  in: query
-  required: false
+  - name: daily
+    in: query
+    required: false
+    description:
+      A list of weather variables which should be returned. Values can be
+      comma separated, or multiple &daily= parameter in the URL can be used.
+    explode: false
+    schema:
+      type: array
+      items:
+        type: string
+        enum:
+          - value: river_discharge
+            unit: m³/s
+            description: Daily river discharge rate in m³/s
+          - value:
+              river_discharge_mean, river_discharge_median, river_discharge_max,
+              river_discharge_min, river_discharge_p25, river_discharge_p75
+            unit: m³/s
+            description:
+              Statistical analysis from ensemble members for river discharge
+              rate in m³/s. Only available for forecasts and not for consolidated historical
+              data.
+  - name: timeformat
+    in: query
+    required: false
+    description:
+      If format unixtime is selected, all time values are returned in UNIX
+      epoch time in seconds. Please note that all time is then in GMT+0!
+    schema:
+      type: string
+      default: iso8601
+  - name: past_days
+    in: query
+    required: false
+    description: If past_days is set, past data can be returned.
+    schema:
+      type: string
+      default: "0"
+  - name: forecast_days
+    in: query
+    required: false
+    description:
+      Per default, only 92 days are returned. Up to 210 days of forecast
+      are possible.
+    schema:
+      type: string
+      default: "92"
+  - name: start_date, end_date
+    in: query
+    required: false
+    description:
+      The time interval to get data. A day must be specified as an ISO8601
+      date (e.g. 2022-06-30). Data are available from 1984-01-01 until 7 month forecast.
+    schema:
+      type: string
+meta:
+  tags:
+    - river-info
+    - flood
+    - river-discharge
   description:
-    If format unixtime is selected, all time values are returned in UNIX
-    epoch time in seconds. Please note that all time is then in GMT+0!
-  schema:
-    type: string
-    default: iso8601
-- name: past_days
-  in: query
-  required: false
-  description: If past_days is set, past data can be returned.
-  schema:
-    type: string
-    default: "0"
-- name: forecast_days
-  in: query
-  required: false
-  description:
-    Per default, only 92 days are returned. Up to 210 days of forecast
-    are possible.
-  schema:
-    type: string
-    default: "92"
-- name: start_dateend_date
-  in: query
-  required: false
-  description:
-    The time interval to get data. A day must be specified as an ISO8601
-    date (e.g. 2022-06-30). Data are available from 1984-01-01 until 7 month forecast.
-  schema:
-    type: string
+    This document outlines the parameters required for an API call that
+    accepts a geographical coordinate and other parameters
+    and returns river discharge data from the largest river in a 5 km area for the given coordinates
+  filename: yml/global_flood_api.yml

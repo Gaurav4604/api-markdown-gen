@@ -1,9 +1,16 @@
-- name: latitude, longitude
-  in: query
-  required: true
-  description:
-    Geographical WGS84 coordinates of the location. Multiple coordinates
-    can be comma , separated. Up to 100 coordinates can be requested at once. Example
-    for multiple coordinates.
-  schema:
-    type: string
+api-endpoint: https://api.open-meteo.com/v1/elevation
+parameters:
+  - name: latitude, longitude
+    in: query
+    required: true
+    description:
+      Geographical WGS84 coordinates of the location. Multiple coordinates
+      can be comma , separated. Up to 100 coordinates can be requested at once. Example
+      for multiple coordinates.
+    schema:
+      type: string
+meta:
+  tags:
+    - elevation
+  description: This API accepts one or multiple geographical coordinate and returns the terrain elevation for those points.
+  filename: yml/elevation_api.yml

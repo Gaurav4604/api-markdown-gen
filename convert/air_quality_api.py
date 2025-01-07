@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 from mrkdwn_analysis import MarkdownAnalyzer
 
 
+class NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
+
+
 # --------------------------------------------------------------------------
 # 1. Helper function to convert Markdown cells to plain text
 # --------------------------------------------------------------------------
@@ -115,12 +120,13 @@ def convert_markdown_tables_to_yaml(file_path: str):
             "hourly",
             "current",
         ]:
+            print(param_name)
             # Both "hourly" and "current" use the SAME table in this new file
             param_entry = array_param_generator(
                 param_name=param_name,
                 required=required,
                 description=description,
-                enum_items=enum_items,
+                enum_items=enum_items.copy(),
                 default_val=default_val,
             )
             if default_val:
@@ -172,6 +178,7 @@ def convert_markdown_tables_to_yaml(file_path: str):
     # 3.6. Convert the constructed parameter list to a YAML string
     yaml_output = yaml.dump(
         parameters_yaml,
+        Dumper=NoAliasDumper,
         sort_keys=False,
         default_flow_style=False,
         allow_unicode=True,
@@ -185,8 +192,27 @@ def convert_markdown_tables_to_yaml(file_path: str):
 # 4. Run the conversion (for demonstration)
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    file_path = "docs/air_quality_api.md"  # or wherever your markdown is
-    final_yaml = convert_markdown_tables_to_yaml(file_path)
-    with open("yml/air_quality_api.yml", "wb") as f:
-        f.write(final_yaml)
+    # file_path = "docs/air_quality_api.md"  # or wherever your markdown is
+    # final_yaml = convert_markdown_tables_to_yaml(file_path)
+    # with open("yml/air_quality_api.yml", "wb") as f:
+    #     f.write(final_yaml)
+    #     f.close()
+    yml = None
+    with open("yml/air_quality_api.yml", "r", encoding="utf-8") as f:
+        yml = yaml.dump(
+            {
+                "api-endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality",
+                "parameters": yaml.safe_load(f),
+                "tags": ["air-quality"],
+                "file": "air_quality_api.yml",
+            },
+            Dumper=NoAliasDumper,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=True,
+            indent=2,
+        )
+        f.close()
+    with open("yml/air_quality_api.yml", "w", encoding="utf-8") as f:
+        f.write(yml)
         f.close()

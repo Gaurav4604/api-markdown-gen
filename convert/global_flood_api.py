@@ -173,12 +173,36 @@ def convert_markdown_tables_to_yaml(file_path: str):
     return yaml_output
 
 
+class NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
+
+
 # --------------------------------------------------------------------------
 # 4. Putting it all together: run the conversion
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
-    file_path = "docs/global_flood_api.md"  # or wherever your markdown is
-    final_yaml = convert_markdown_tables_to_yaml(file_path)
-    with open("yml/global_flood_api.yml", "wb") as f:
-        f.write(final_yaml)
+    # file_path = "docs/global_flood_api.md"  # or wherever your markdown is
+    # final_yaml = convert_markdown_tables_to_yaml(file_path)
+    # with open("yml/global_flood_api.yml", "wb") as f:
+    #     f.write(final_yaml)
+    #     f.close()
+    yml = None
+    with open("yml/global_flood_api.yml", "r", encoding="utf-8") as f:
+        yml = yaml.dump(
+            {
+                "api-endpoint": "https://flood-api.open-meteo.com/v1/flood",
+                "parameters": yaml.safe_load(f),
+                "tags": ["flood-conditions"],
+                "file": "global_flood_api.yml",
+            },
+            Dumper=NoAliasDumper,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=True,
+            indent=2,
+        )
+        f.close()
+    with open("yml/global_flood_api.yml", "w", encoding="utf-8") as f:
+        f.write(yml)
         f.close()

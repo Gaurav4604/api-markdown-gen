@@ -1,184 +1,187 @@
-- name: latitude, longitude
-  in: query
-  required: true
-  description:
-    Geographical WGS84 coordinates of the location. Multiple coordinates
-    can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
-    data for multiple locations the JSON output changes to a list of structures. CSV
-    and XLSX formats add a column location_id.
-  schema:
-    type: string
-- name: start_dateend_date
-  in: query
-  required: true
-  description:
-    The time interval to get weather data. A day must be specified as an
-    ISO8601 date (e.g. 2022-12-31). Data is available from 1950-01-01 until 2050-01-01.
-  schema:
-    type: string
-- name: models
-  in: query
-  required: true
-  description:
-    A list of climate models separated by comma. 7 climate models are available
-    CMCC_CM2_VHR4, FGOALS_f3_H, HiRAM_SIT_HR MRI_AGCM3_2_S, EC_Earth3P_HR, MPI_ESM1_2_XR,
-    and NICAM16_8S are supported.
-  explode: false
-  schema:
-    type: array
-    items:
+api-endpoint: https://climate-api.open-meteo.com/v1/climate
+parameters:
+  - name: latitude, longitude
+    in: query
+    required: true
+    description:
+      Geographical WGS84 coordinates of the location. Multiple coordinates
+      can be comma separated. E.g. &latitude=52.52,48.85&longitude=13.41,2.35. To return
+      data for multiple locations the JSON output changes to a list of structures. CSV
+      and XLSX formats add a column location_id.
+    schema:
       type: string
-- name: daily
-  in: query
-  required: true
-  description:
-    A list of daily weather variable aggregations which should be returned.
-    Values can be comma separated, or multiple &daily= parameter in the URL can be
-    used.
-  explode: false
-  schema:
-    type: array
-    items:
+  - name: start_date, end_date
+    in: query
+    required: true
+    description:
+      The time interval to get weather data. A day must be specified as an
+      ISO8601 date (e.g. 2022-12-31). Data is available from 1950-01-01 until 2050-01-01.
+    schema:
       type: string
-      enum:
-        - value: temperature_2m_max, temperature_2m_min, temperature_2m_mean
-          unit: °C (°F)
-          description:
-            Maximum, minimum and mean daily air temperature at 2 meters above
-            ground. Additionally, temperature is downscaled using a 90-meter digital
-            elevation model. Climate models are not perfect, and they have inherent
-            uncertainties and biases that can affect the accuracy of their temperature
-            predictions. However, the temperature anomaly over a long period of time
-            is a good indicator the future Earth's climate. The following paper analyses
-            the robustness of CMIP6 temperature predictions.
-        - value: cloud_cover_mean
-          unit: "%"
-          description:
-            Mean cloud cover on a given day. Cloud cover in climate models
-            is generally represented through simplified parameterizations that estimate
-            the cloud amount, height, and thickness based on atmospheric conditions
-            such as temperature, humidity, and wind speed. These parameterizations have
-            been shown to provide reasonable estimates of global cloud cover but they
-            can have significant uncertainties and biases on regional and local scales.
-            Systematic biases have been corrected using the weather reanalysis ERA5.
-        - value: relative_humidity_2m_max, relative_humidity_2m_min, relative_humidity_2m_mean
-          unit: "%"
-          description:
-            Maximum, minimum and mean daily relative humidity at 2 meters
-            above ground. While systematic biases in relative humidity have been removed
-            through bias correction, caution should still be exercised when using relative
-            humidity data as raw data shows larger differences between different climate
-            models.
-        - value: soil_moisture_0_to_10cm_mean
-          unit: m³/m³
-          description:
-            Daily mean soil moisture fraction within 0-10 cm. Soil moisture
-            data is only available by MRI_AGCM3_2_S and EC_Earth3P_HR. Due to the limited
-            number of climate models that provide soil moisture data, it is not possible
-            to make a general statement about their accuracy. As a result, it may be
-            advisable to conduct your own water balance modeling.
-        - value: precipitation_sum
-          unit: mm
-          description:
-            Sum of daily precipitation (including rain, showers and snowfall).
-            Climate models have been able to capture some of the large-scale patterns
-            of precipitation and associated droughts and extreme precipitation events,
-            particularly over longer time scales. However, there are still uncertainties
-            associated with the representation of precipitation at smaller geographical
-            scales including thunderstorm. Please compare different climate models for
-            drought duration or extreme precipitation events. The following papers analyze
-            extreme precipitation and droughts in CMIP6 models.
-        - value: rain_sum
-          unit: mm
-          description: Sum of daily liquid rain, excluding snow.
-        - value: snowfall_sum
-          unit: cm
-          description:
-            Sum of daily snowfall. Please note that snowfall data may have
-            larger biases in complex terrain, as it is not adjusted for different terrain
-            elevations. Use this data with caution to estimate how mountainous regions
-            will be effected by reduced snowfall.
-        - value: wind_speed_10m_mean, wind_speed_10m_max
-          unit: km/h (mph, m/s, knots)
-          description:
-            Mean and maximum wind speed 10 meter above ground on a day. Simulations
-            of winds and pressure systems in climate models are greatly influenced by
-            the resolution used to model the terrain. Without bias correction, wind
-            speed can vary significantly between different climate models, particularly
-            in complex terrain. Although, data is bias corrected with ERA5, it might
-            not accurately represent local conditions.
-        - value: pressure_msl_mean
-          unit: hPa
-          description: Daily mean air pressure reduced to mean sea level.
-        - value: shortwave_radiation_sum
-          unit: MJ/m²
-          description:
-            The sum of solar radiation on a given day in Megajoules. Shortwave
-            radiation predictions are impacted by aerosols and clouds present in the
-            atmosphere. The future composition of gases in the atmosphere is a key area
-            of study in climate modeling. As there are uncertainties associated with
-            aerosols and clouds, it is important to take these into account when using
-            shortwave radiation data.
-- name: temperature_unit
-  in: query
-  required: false
-  description: If fahrenheit is set, all temperature values are converted to Fahrenheit.
-  schema:
-    type: string
-    default: celsius
-- name: wind_speed_unit
-  in: query
-  required: false
-  description: "Other wind speed speed units: ms, mph and kn"
-  schema:
-    type: string
-    default: kmh
-- name: precipitation_unit
-  in: query
-  required: false
-  description: "Other precipitation amount units: inch"
-  schema:
-    type: string
-    default: mm
-- name: timeformat
-  in: query
-  required: false
-  description:
-    If format unixtime is selected, all time values are returned in UNIX
-    epoch time in seconds. Please note that all time is then in GMT+0! For daily values
-    with unix timestamp, please apply utc_offset_seconds again to get the correct
-    date.
-  schema:
-    type: string
-    default: iso8601
-- name: disable_bias_correction
-  in: query
-  required: false
-  description:
-    Setting disable_bias_correction to true disables statistical downscaling
-    and bias correction onto ERA5-Land. By default, all data is corrected using linear
-    bias correction, and coefficients have been calculated for each month over a 50-year
-    time series. The climate change signal is not affected by linear bias correction.
-  schema:
-    type: string
-    default: "false"
-- name: cell_selection
-  in: query
-  required: false
-  description:
-    Set a preference how grid-cells are selected. The default land finds
-    a suitable grid-cell on land with similar elevation to the requested coordinates
-    using a 90-meter digital elevation model. sea prefers grid-cells on sea. nearest
-    selects the nearest possible grid-cell.
-  schema:
-    type: string
-    default: land
-- name: apikey
-  in: query
-  required: false
-  description:
-    Only required to commercial use to access reserved API resources for
-    customers. The server URL requires the prefix customer-. See pricing for more
-    information.
-  schema:
-    type: string
+  - name: models
+    in: query
+    required: true
+    description:
+      A list of climate models separated by comma. 7 climate models are available
+      CMCC_CM2_VHR4, FGOALS_f3_H, HiRAM_SIT_HR MRI_AGCM3_2_S, EC_Earth3P_HR, MPI_ESM1_2_XR,
+      and NICAM16_8S are supported.
+    explode: false
+    schema:
+      type: array
+      items:
+        type: string
+  - name: daily
+    in: query
+    required: true
+    description:
+      A list of daily weather variable aggregations which should be returned.
+      Values can be comma separated, or multiple &daily= parameter in the URL can be
+      used.
+    explode: false
+    schema:
+      type: array
+      items:
+        type: string
+        enum:
+          - value: temperature_2m_max, temperature_2m_min, temperature_2m_mean
+            unit: °C (°F)
+            description:
+              Maximum, minimum and mean daily air temperature at 2 meters above
+              ground. Additionally, temperature is downscaled using a 90-meter digital
+              elevation model. Climate models are not perfect, and they have inherent
+              uncertainties and biases that can affect the accuracy of their temperature
+              predictions. However, the temperature anomaly over a long period of time
+              is a good indicator the future Earth's climate. The following paper analyses
+              the robustness of CMIP6 temperature predictions.
+          - value: cloud_cover_mean
+            unit: "%"
+            description:
+              Mean cloud cover on a given day. Cloud cover in climate models
+              is generally represented through simplified parameterizations that estimate
+              the cloud amount, height, and thickness based on atmospheric conditions
+              such as temperature, humidity, and wind speed. These parameterizations have
+              been shown to provide reasonable estimates of global cloud cover but they
+              can have significant uncertainties and biases on regional and local scales.
+              Systematic biases have been corrected using the weather reanalysis ERA5.
+          - value: relative_humidity_2m_max, relative_humidity_2m_min, relative_humidity_2m_mean
+            unit: "%"
+            description:
+              Maximum, minimum and mean daily relative humidity at 2 meters
+              above ground. While systematic biases in relative humidity have been removed
+              through bias correction, caution should still be exercised when using relative
+              humidity data as raw data shows larger differences between different climate
+              models.
+          - value: soil_moisture_0_to_10cm_mean
+            unit: m³/m³
+            description:
+              Daily mean soil moisture fraction within 0-10 cm. Soil moisture
+              data is only available by MRI_AGCM3_2_S and EC_Earth3P_HR. Due to the limited
+              number of climate models that provide soil moisture data, it is not possible
+              to make a general statement about their accuracy. As a result, it may be
+              advisable to conduct your own water balance modeling.
+          - value: precipitation_sum
+            unit: mm
+            description:
+              Sum of daily precipitation (including rain, showers and snowfall).
+              Climate models have been able to capture some of the large-scale patterns
+              of precipitation and associated droughts and extreme precipitation events,
+              particularly over longer time scales. However, there are still uncertainties
+              associated with the representation of precipitation at smaller geographical
+              scales including thunderstorm. Please compare different climate models for
+              drought duration or extreme precipitation events. The following papers analyze
+              extreme precipitation and droughts in CMIP6 models.
+          - value: rain_sum
+            unit: mm
+            description: Sum of daily liquid rain, excluding snow.
+          - value: snowfall_sum
+            unit: cm
+            description:
+              Sum of daily snowfall. Please note that snowfall data may have
+              larger biases in complex terrain, as it is not adjusted for different terrain
+              elevations. Use this data with caution to estimate how mountainous regions
+              will be effected by reduced snowfall.
+          - value: wind_speed_10m_mean, wind_speed_10m_max
+            unit: km/h (mph, m/s, knots)
+            description:
+              Mean and maximum wind speed 10 meter above ground on a day. Simulations
+              of winds and pressure systems in climate models are greatly influenced by
+              the resolution used to model the terrain. Without bias correction, wind
+              speed can vary significantly between different climate models, particularly
+              in complex terrain. Although, data is bias corrected with ERA5, it might
+              not accurately represent local conditions.
+          - value: pressure_msl_mean
+            unit: hPa
+            description: Daily mean air pressure reduced to mean sea level.
+          - value: shortwave_radiation_sum
+            unit: MJ/m²
+            description:
+              The sum of solar radiation on a given day in Megajoules. Shortwave
+              radiation predictions are impacted by aerosols and clouds present in the
+              atmosphere. The future composition of gases in the atmosphere is a key area
+              of study in climate modeling. As there are uncertainties associated with
+              aerosols and clouds, it is important to take these into account when using
+              shortwave radiation data.
+  - name: temperature_unit
+    in: query
+    required: false
+    description: If fahrenheit is set, all temperature values are converted to Fahrenheit.
+    schema:
+      type: string
+      default: celsius
+  - name: wind_speed_unit
+    in: query
+    required: false
+    description: "Other wind speed speed units: ms, mph and kn"
+    schema:
+      type: string
+      default: kmh
+  - name: precipitation_unit
+    in: query
+    required: false
+    description: "Other precipitation amount units: inch"
+    schema:
+      type: string
+      default: mm
+  - name: timeformat
+    in: query
+    required: false
+    description:
+      If format unixtime is selected, all time values are returned in UNIX
+      epoch time in seconds. Please note that all time is then in GMT+0! For daily values
+      with unix timestamp, please apply utc_offset_seconds again to get the correct
+      date.
+    schema:
+      type: string
+      default: iso8601
+  - name: disable_bias_correction
+    in: query
+    required: false
+    description:
+      Setting disable_bias_correction to true disables statistical downscaling
+      and bias correction onto ERA5-Land. By default, all data is corrected using linear
+      bias correction, and coefficients have been calculated for each month over a 50-year
+      time series. The climate change signal is not affected by linear bias correction.
+    schema:
+      type: string
+      default: "false"
+meta:
+  tags:
+    - weather
+    - climate-change-model
+    - daily-weather-data
+    - temperature
+    - cloud-cover
+    - relative-humidity
+    - soil-moisture
+    - precipitation
+    - wind-speed
+    - pressure
+    - shortwave-radiation
+    - bias-correction
+    - climate-change
+  description: This document outlines the parameters for an API call to retrieve
+    climate data over a long period time, including temperature, cloud cover, humidity, soil moisture,
+    precipitation, wind speed, air pressure, shortwave radiation, and more. It specifies
+    required fields like latitude and longitude, start and end dates, and various
+    climate models to choose from.
+  filename: yml/climate_api.yml
