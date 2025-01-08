@@ -1,6 +1,5 @@
 import os
 from markitdown import MarkItDown
-from frontmatter import loads
 from mrkdwn_analysis import MarkdownAnalyzer
 
 
