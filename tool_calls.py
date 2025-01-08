@@ -11,6 +11,12 @@ import requests
 import json
 
 
+class QuestionGeoMeta(BaseModel):
+    location: str
+    latlng: list[float]
+    timezone: str
+
+
 class Location(BaseModel):
     location: str
     location_found: bool
@@ -116,14 +122,14 @@ def get_location_from_question(question: str) -> Location:
     return location
 
 
-def get_lat_long(location: str) -> list[int]:
+def get_lat_long(location: str) -> list[float]:
     """
     Gets the Latitude and Longitude for the provided location
 
     Args:
         location (str): The location for which latitude and longitude is requested
     Returns:
-        list[int]: a list containing 2 elements, in order latitude and longitude associated to the location
+        list[float]: a list containing 2 elements, in order latitude and longitude associated to the location
     """
     # ⏲️ Start time stamp
     start_time = datetime.now()
@@ -145,11 +151,11 @@ that is the closest to the user's provided timezone
 """
 
 
-def get_timezone(latlng: list[int]) -> str:
+def get_timezone(latlng: list[float]) -> str:
     """
     Gets the timezone associated with the latitude and longitude, compatible with API calls
     Args:
-        latlng (list[int]): An array with 2 elements, in order of latitude and longitude
+        latlng (list[float]): An array with 2 elements, in order of latitude and longitude
     Returns:
         str: timezone closest to the latitude and longitude provided, which works with the API
     """
@@ -311,7 +317,7 @@ so include the parameters responsible according to the question
 def query_generation_prompt(
     doc: str,
     api_endpoint: str,
-    latlng: list[int],
+    latlng: list[float],
     timezone: str,
     question: str,
 ) -> str:
@@ -347,8 +353,8 @@ Question: {}
         doc,
         api_endpoint,
         latlng,
-        datetime.now.strftime("%Y-%m-%d"),
-        datetime.now.strftime("%H:%M:%S"),
+        datetime.now().strftime("%Y-%m-%d"),
+        datetime.now().strftime("%H:%M:%S"),
         timezone,
         question,
     )
@@ -362,7 +368,7 @@ Question: {}
 
 def generate_and_execute_api_calls(
     selected_docs: list[Doc],
-    latlng: list[int],
+    latlng: list[float],
     timezone: str,
 ) -> list[Response]:
     """
@@ -370,7 +376,7 @@ def generate_and_execute_api_calls(
     And Executes Them
     Args:
         selected_docs (list[Doc]): list of documents for which the API calls need to be generated
-        latlng (list[int]): a list containing 2 elements, in order latitude and longitude associated to the location
+        latlng (list[float]): a list containing 2 elements, in order latitude and longitude associated to the location
         timezone: the timezone in which the location exists
     Returns:
       list[Response]: A list of Response objects, with each object containing a Response generated for the Question associated to it
@@ -500,7 +506,9 @@ def infer_conclusion(queries: list[Response], question: str) -> Conclusion:
     return conclusion
 
 
-def get_question_meta_data(question: str, default_location="Adelaide"):
+def get_question_meta_data(
+    question: str, default_location="Adelaide"
+) -> QuestionGeoMeta:
     """
 
     Extracts out geographical meta-data associated to the question,
@@ -511,7 +519,7 @@ def get_question_meta_data(question: str, default_location="Adelaide"):
         default_location (str): an optional location parameter passed, which is used in case the question doesn't contain location information
 
     Returns:
-        dict: dictionary containing location, latlng, timezone
+        QuestionGeoMeta: metadata containing location, latlng, timezone
     """
 
     location = get_location_from_question(question)
@@ -536,11 +544,7 @@ def get_question_meta_data(question: str, default_location="Adelaide"):
     print(
         f"✅ [meta_data] Finished at {end_time} (Execution time: {end_time - start_time})\n"
     )
-    return {
-        "location": location.model_dump_json(),
-        "latlng": latlng,
-        "timezone": tz,
-    }
+    return QuestionGeoMeta(location=location.location, latlng=latlng, timezone=tz)
 
 
 tool_list = [
