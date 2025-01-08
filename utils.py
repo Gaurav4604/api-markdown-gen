@@ -74,36 +74,3 @@ def fix_forecast_day_inconsistency(request_url: str) -> str:
     updated_url = urlunparse(parsed_url._replace(query=new_query))
 
     return updated_url
-
-
-# import ollama
-# import yaml
-
-# call = "https://marine-api.open-meteo.com/v1/marine?latitude=-34.93&longitude=138.6&timezone=Australia%2FSydney&daily=wave_height_max,swell_wave_height_max,ocean_current_velocity,ocean_current_direction&forecast_days=1"
-
-# error = """
-# {"error":true,"reason":"Data corrupted at path ''. Cannot initialize IconWaveVariableDaily from invalid String value wave_height_max,swell_wave_height_max,ocean_current_velocity,ocean_current_direction."}
-# """
-
-# doc = yaml.safe_load(open("yml/marine_weather_api.yml", "r", encoding="utf-8"))
-
-# res = ollama.chat(
-#     model="codegemma",
-#     messages=[
-#         {
-#             "role": "user",
-#             "content": """
-# Fix the API call {}
-# that fails with error {},
-# With Reference Doc:
-# {}
-# """.format(
-#                 call, error, doc
-#             ),
-#         }
-#     ],
-#     options={"temperature": 0.1, "num_ctx": 16384},
-# )
-
-
-# print(res["message"]["content"])

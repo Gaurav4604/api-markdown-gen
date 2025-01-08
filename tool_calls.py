@@ -11,6 +11,11 @@ import requests
 import json
 
 
+class Location(BaseModel):
+    location: str
+    location_found: bool
+
+
 class TimeZone(BaseModel):
     timezone: str
 
@@ -36,10 +41,19 @@ class Response(BaseModel):
     query: str
 
 
+class Conclusion(BaseModel):
+    answer: str
+    reasoning: str
+
+
 directory = "yml"
 
 
 def list_files(directory):
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"📂 [list_files] Started at {start_time} ...")
+
     try:
         files = [
             f
@@ -48,11 +62,16 @@ def list_files(directory):
         ]
         return list(map(lambda x: directory + "/" + x, files))
     except FileNotFoundError:
-        print(f"Directory '{directory}' not found.")
+        print(f"❗ [list_files] Directory '{directory}' not found.")
         return []
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"❗ [list_files] An error occurred: {e}")
         return []
+    finally:
+        end_time = datetime.now()
+        print(
+            f"✅ [list_files] Finished at {end_time} (Execution time: {end_time - start_time})"
+        )
 
 
 files = list_files(directory)
@@ -62,14 +81,39 @@ yml_files = list(
 )
 
 
-def get_today_date() -> datetime:
+def get_location_from_question(question: str) -> Location:
     """
-    Gets today's date time data
+    Extracts location information from the question
 
+    Args:
+        question (str): the question for which location needs to be extracted
     Returns:
-        datetime
+        Location: the location value, and if it was found in the question
     """
-    return datetime.now()
+    print(
+        f"🕵️ [get_location_from_question] Extracting location from question: '{question}'"
+    )
+
+    res = ollama.chat(
+        model="llama3.2",
+        messages=[
+            {
+                "role": "user",
+                "content": "{} <- does this question contain location information? if so what is it?".format(
+                    question
+                ),
+            }
+        ],
+        format=Location.model_json_schema(),
+        options={"num_ctx": 512, "temperature": 0.1},
+    )
+
+    location = Location.model_validate_json(res["message"]["content"])
+    print(
+        f"📍 [get_location_from_question] Location extracted: {location.model_dump_json()}"
+    )
+
+    return location
 
 
 def get_lat_long(location: str) -> list[int]:
@@ -81,7 +125,17 @@ def get_lat_long(location: str) -> list[int]:
     Returns:
         list[int]: a list containing 2 elements, in order latitude and longitude associated to the location
     """
-    return list(map(lambda x: round(x, 2), geocoder.arcgis(location).latlng))
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"🕵️ [get_lat_long] Started at {start_time}, location='{location}' ...")
+
+    result = list(map(lambda x: round(x, 2), geocoder.arcgis(location).latlng))
+
+    end_time = datetime.now()
+    print(
+        f"✅ [get_lat_long] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
+    return result
 
 
 timezone_system_prompt = """
@@ -99,6 +153,10 @@ def get_timezone(latlng: list[int]) -> str:
     Returns:
         str: timezone closest to the latitude and longitude provided, which works with the API
     """
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"🌎 [get_timezone] Started at {start_time}, latlng={latlng} ...")
+
     targets = [
         "America%2FAnchorage",
         "America%2FLos_Angeles",
@@ -143,7 +201,13 @@ def get_timezone(latlng: list[int]) -> str:
         format=TimeZone.model_json_schema(),
     )
     # return res["message"]["content"]
-    return TimeZone.model_validate_json(res["message"]["content"]).timezone
+    chosen_tz = TimeZone.model_validate_json(res["message"]["content"]).timezone
+
+    end_time = datetime.now()
+    print(
+        f"✅ [get_timezone] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
+    return chosen_tz
 
 
 doc_selection_reasoning_system = """
@@ -161,6 +225,10 @@ and use most critical conditions that would correlate to the query
 
 
 def doc_selection_reasoning_dump(doc: Any, query: str):
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"📝 [doc_selection_reasoning_dump] Started at {start_time} ...")
+
     prompt = """
 <documents> 
     {}
@@ -177,6 +245,11 @@ NOTE: unless extremely essential, do not include historical_weather_api.md file 
     """.format(
         doc, query
     )
+
+    end_time = datetime.now()
+    print(
+        f"✅ [doc_selection_reasoning_dump] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
     return prompt
 
 
@@ -190,6 +263,12 @@ def generate_target_docs_for_query(user_query: str) -> list[Doc]:
     Returns:
       list[Doc]: A list of documents, containing file name, the reason for their selection, sub-query they target
     """
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(
+        f"🗂️ [generate_target_docs_for_query] Started at {start_time}, user_query='{user_query}' ..."
+    )
+
     files_meta = list(map(lambda yml: yml["meta"], yml_files))
 
     res = ollama.chat(
@@ -209,7 +288,13 @@ def generate_target_docs_for_query(user_query: str) -> list[Doc]:
             "num_threads": 16,
         },
     )
-    return DocList.model_validate_json(res["message"]["content"]).files
+    doc_list = DocList.model_validate_json(res["message"]["content"]).files
+
+    end_time = datetime.now()
+    print(
+        f"✅ [generate_target_docs_for_query] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
+    return doc_list
 
 
 query_generation_system = """
@@ -227,10 +312,13 @@ def query_generation_prompt(
     doc: str,
     api_endpoint: str,
     latlng: list[int],
-    current_datetime: datetime,
     timezone: str,
     question: str,
 ) -> str:
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"🔧 [query_generation_prompt] Started at {start_time} ...")
+
     prompt = """
 <document> 
     {}
@@ -259,10 +347,15 @@ Question: {}
         doc,
         api_endpoint,
         latlng,
-        current_datetime.strftime("%Y-%m-%d"),
-        current_datetime.strftime("%H:%M:%S"),
+        datetime.now.strftime("%Y-%m-%d"),
+        datetime.now.strftime("%H:%M:%S"),
         timezone,
         question,
+    )
+
+    end_time = datetime.now()
+    print(
+        f"✅ [query_generation_prompt] Finished at {end_time} (Execution time: {end_time - start_time})"
     )
     return prompt
 
@@ -270,7 +363,6 @@ Question: {}
 def generate_and_execute_api_calls(
     selected_docs: list[Doc],
     latlng: list[int],
-    current_datetime: datetime,
     timezone: str,
 ) -> list[Response]:
     """
@@ -279,13 +371,19 @@ def generate_and_execute_api_calls(
     Args:
         selected_docs (list[Doc]): list of documents for which the API calls need to be generated
         latlng (list[int]): a list containing 2 elements, in order latitude and longitude associated to the location
-        current_datetime (datetime): datetime information of the location
         timezone: the timezone in which the location exists
     Returns:
       list[Response]: A list of Response objects, with each object containing a Response generated for the Question associated to it
     """
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"🤖 [generate_and_execute_api_calls] Started at {start_time} ...")
+
     queries: list[Response] = []
     for doc in selected_docs:
+        # Log each doc as we iterate
+        print(f"🔍 [generate_and_execute_api_calls] Processing doc: {doc.file} ...")
+
         target = list(filter(lambda x: doc.file in x["meta"]["filename"], yml_files))[0]
         res = ollama.chat(
             model="gemma2",
@@ -297,7 +395,6 @@ def generate_and_execute_api_calls(
                         target["parameters"],
                         target["api-endpoint"],
                         latlng,
-                        current_datetime,
                         timezone,
                         doc.question_for_doc,
                     ),
@@ -318,18 +415,20 @@ def generate_and_execute_api_calls(
         query = utils.fix_start_date_incompletion(query)
         query = utils.fix_forecast_day_inconsistency(query)
 
+        print(f"🌐 [generate_and_execute_api_calls] Sending request: {query}")
         api_response = requests.get(query)
 
         if api_response.status_code == 200:
-            res = json.dumps(api_response.json(), indent=2)
+            res_text = json.dumps(api_response.json(), indent=2)
             queries.append(
                 Response(
-                    response=res,
+                    response=res_text,
                     file=doc.file,
                     question_for_doc=doc.question_for_doc,
                     query=query,
                 )
             )
+            print(f"✅ [generate_and_execute_api_calls] Request succeeded: {doc.file}")
         else:
             queries.append(
                 Response(
@@ -339,104 +438,121 @@ def generate_and_execute_api_calls(
                     query=query,
                 )
             )
+            print(f"❌ [generate_and_execute_api_calls] Request failed for: {doc.file}")
 
+    end_time = datetime.now()
+    print(
+        f"✅ [generate_and_execute_api_calls] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
     return queries
 
 
-functions = {
-    "generate_target_docs_for_query": generate_target_docs_for_query,
-    "generate_and_execute_api_calls": generate_and_execute_api_calls,
-}
+conclusion_template = """
+    You are to provide weather data based conclusion to the provided question,
+    after understanding the data responses, for each of the sub-questions asked
+    while pointing to response data you've taken as factors for the conclusion as points
 
-q1 = "in the next seven days, when would be a good time to swim, in the ocean, in Adelaide?"
-q2 = "will tomorrow afternoon be a nice time to swim in the ocean in Adelaide?"
-q3 = "should I wear a hat tomorrow?"
-q4 = "is it gonna be sweater weather soon?"
+    Responses: {}
+    Answer the initial Question: {}
+"""
 
-q_used = q4
 
-messages = [
-    {
-        "role": "user",
-        "content": q_used,
+def infer_conclusion(queries: list[Response], question: str) -> Conclusion:
+    """
+    Generates a concluding statement based on the weather data responses
+    and the original question asked.
+
+    Args:
+        queries (list[Response]): A list of Response objects which contain
+            the data returned by the API calls for sub-questions.
+        question (str): The original question provided by the user.
+
+    Returns:
+        Conclusion: the final conclusion summarizing the weather data in the context of the original question.
+    """
+    # ⏲️ Start time stamp
+    start_time = datetime.now()
+    print(f"📜 [infer_conclusion] Started at {start_time}, question='{question}' ...")
+
+    # Build the prompt using the conclusion_template
+    prompt_content = conclusion_template.format(queries, question)
+
+    # Call the ollama.chat model to generate the conclusion
+    res = ollama.chat(
+        model="marco-o1",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt_content,
+            },
+        ],
+        options={"temperature": 0.1, "num_ctx": 8192},
+        format=Conclusion.model_json_schema(),
+    )
+
+    conclusion = Conclusion.model_validate_json(res["message"]["content"])
+
+    end_time = datetime.now()
+    print(
+        f"✅ [infer_conclusion] Finished at {end_time} (Execution time: {end_time - start_time})"
+    )
+
+    return conclusion
+
+
+def get_question_meta_data(question: str, default_location="Adelaide"):
+    """
+
+    Extracts out geographical meta-data associated to the question,
+    such as location, latitude-longitude, timezone and date-time
+
+    Args:
+        question (str): the question for which geographical meta-data needs to be extracted
+        default_location (str): an optional location parameter passed, which is used in case the question doesn't contain location information
+
+    Returns:
+        dict: dictionary containing location, latlng, timezone
+    """
+
+    location = get_location_from_question(question)
+    if not location.location_found:
+        location.location = default_location
+
+    start_time = datetime.now()
+    print(
+        "🔎 Starting meta_data pipeline for location '{}'...\n".format(
+            location.location
+        )
+    )
+    print(f"📜 [meta_data] Started at {start_time}' ...\n")
+
+    latlng = get_lat_long(location.location)
+    print(f"📍 Retrieved lat/long for '{location.location}': {latlng}")
+
+    # Determine Timezone
+    tz = get_timezone(latlng)
+    print(f"🌏 Derived timezone for coordinates {latlng}: {tz}")
+    end_time = datetime.now()
+    print(
+        f"✅ [meta_data] Finished at {end_time} (Execution time: {end_time - start_time})\n"
+    )
+    return {
+        "location": location.model_dump_json(),
+        "latlng": latlng,
+        "timezone": tz,
     }
+
+
+tool_list = [
+    get_question_meta_data,
+    generate_target_docs_for_query,
+    generate_and_execute_api_calls,
+    infer_conclusion,
 ]
 
-latlng = get_lat_long("Adelaide")
-print("Lat Long data: ", latlng)
-date_data = get_today_date()
-print("Date data: ", date_data)
-
-tz = get_timezone(latlng)
-print("Timezone data: ", tz)
-
-docs = generate_target_docs_for_query(q_used)
-print("Selected Docs: ", docs)
-api_queries = generate_and_execute_api_calls(docs, latlng, date_data, tz)
-print("Generated API Responses: ", api_queries)
-
-res = ollama.chat(
-    model="marco-o1",
-    messages=[
-        {
-            "role": "user",
-            "content": """
-    Based on the Responses: {}
-    Answer the initial Question: {}
-    while pointing to response data you've taken as factors for the result""".format(
-                api_queries, q_used
-            ),
-        },
-    ],
-    options={"temperature": 0.1, "num_ctx": 8192},
-)
-
-print(res["message"]["content"])
-
-
-# system_main = """
-# You're a tool and payload generator, that works with a pipeline
-# of tools to generate a response for user's query, by constructing weather related API calls,
-# related to user's query location, along with realtime date and geographical data
-# """
-
-# response = ollama.chat(
-#     "llama3.2",
-#     messages=messages,
-#     tools=[
-#         get_today_date,
-#         get_lat_long,
-#         generate_target_docs_for_query,
-#         generate_api_calls,
-#     ],
-#     options={"temperature": 0.1},
-# )
-
-# print(response.model_dump_json(indent=2))
-
-# if response.message.tool_calls:
-#     # There may be multiple tool calls in the response
-#     for tool in response.message.tool_calls:
-#         # Ensure the function is available, and then call it
-#         if function_to_call := functions.get(tool.function.name):
-#             print("Calling function:", tool.function.name)
-#             print("Arguments:", tool.function.arguments)
-#             output = function_to_call(**tool.function.arguments)
-#             print("Function output:", output)
-#         else:
-#             print("Function", tool.function.name, "not found")
-
-# # Only needed to chat with the model using the tool call results
-# if response.message.tool_calls:
-#     # Add the function response to messages for the model to use
-#     messages.append(response.message)
-#     messages.append(
-#         {"role": "tool", "content": str(output), "name": tool.function.name}
-#     )
-
-#     # Get final response from model with function outputs
-#     final_response = ollama.chat("llama3.2", messages=messages)
-#     print("Final response:", final_response.message.content)
-
-# else:
-#     print("No tool calls returned from model")
+functions = {
+    "get_question_meta_data": get_question_meta_data,
+    "generate_target_docs_for_query": generate_target_docs_for_query,
+    "generate_and_execute_api_calls": generate_and_execute_api_calls,
+    "infer_conclusion": infer_conclusion,
+}
