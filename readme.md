@@ -25,25 +25,44 @@ this codebase enables a seamless flow from user query to final answer.
 ## Requirements
 
 - Python 3.8+
-- ollama (for LLM inference server)
+- ollama server (for LLM inference)
 
-## Installation
+## Installation and Setup
+
+### clone repo
+
+```bash
+git clone https://github.com/Gaurav4604/gen-weather-RAG.git
+```
+
+### model fetch
 
 ```bash
 ollama pull llama3.2
 ollama pull gemma2
 ollama pull marco-o1
-
-pip install -r requirements.txt
 ```
 
-## Example Usage
+### virtual env setup (optional but recommended)
+
+```bash
+python -m venv env
+env/Scripts/activate
+```
+
+### dependencies installation
+
+```bash
+pip install -r requirements.txt
+```
 
 ### Usage
 
 ```bash
 python main.py -q "your question"
 ```
+
+## Example Usage
 
 ### Example 1
 
@@ -70,6 +89,10 @@ python main.py -q "should I wear a hat tomorrow afternoon? P.S. I'm in Adelaide!
   "reasoning": "The provided weather forecast indicates that tomorrow afternoon in Adelaide will have a temperature of approximately 21.3°C and a UV index of 7.65. A UV index above 3 is considered moderate, and values above 7 are high. High UV levels can lead to increased risk of sunburn and other skin damage. Therefore, wearing a hat would be a prudent measure to safeguard against the strong ultraviolet radiation expected."
 }
 ```
+
+## **Motivation**
+
+I was bored of getting re-directed to the weather app any time I asked siri any kind of weather related question, so I decided to build my own weather pipeline for concise and targetted Natural Language response.
 
 ## **How it Works**
 
