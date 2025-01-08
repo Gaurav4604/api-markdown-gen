@@ -1,6 +1,18 @@
 # **Gen-Weather-RAG**
 
-This repository provides a Retrieval-Augmented Generation (RAG) chain pipeline to handle weather-related questions using dynamic query generation, chain-of-thought reasoning, and structured output. By orchestrating multiple steps—location extraction, document retrieval, API parameter generation, and final conclusion—this codebase enables a seamless flow from user query to final answer.
+This repository provides a Retrieval-Augmented Generation (RAG) chain pipeline to handle _natural language casual weather-related questions_ such as:
+
+- is tomorrow a sweater weather kinda day?
+- should I wear a hat tomorrow afternoon? P.S. I'm in Adelaide!
+
+using dynamic query generation, chain-of-thought reasoning, and structured output. By orchestrating multiple steps
+
+- geo-location, timezone and current date-time extraction
+- tags and summary based targetted document retrieval
+- API parameter generation and query execution
+- final conclusion
+
+this codebase enables a seamless flow from user query to final answer.
 
 ## Overview
 
@@ -13,7 +25,7 @@ This repository provides a Retrieval-Augmented Generation (RAG) chain pipeline t
 ## Requirements
 
 - Python 3.8+
-- ollama (for LLM server)
+- ollama (for LLM inference server)
 
 ## Installation
 
@@ -27,6 +39,14 @@ pip install -r requirements.txt
 
 ## Example Usage
 
+### Usage
+
+```bash
+python main.py -q "your question"
+```
+
+### Example 1
+
 ```bash
 python main.py -q "will it rain in the next hour in tokyo?"
 ```
@@ -38,12 +58,25 @@ python main.py -q "will it rain in the next hour in tokyo?"
 }
 ```
 
+### Example 2
+
+```bash
+python main.py -q "should I wear a hat tomorrow afternoon? P.S. I'm in Adelaide!"
+```
+
+```json
+{
+  "answer": "Based on the weather data for tomorrow afternoon in Adelaide, the expected temperature is around 21.3°C with a UV index of 7.65. Given that the UV index is relatively high, it would be advisable to wear a hat to protect your skin from harmful ultraviolet rays.",
+  "reasoning": "The provided weather forecast indicates that tomorrow afternoon in Adelaide will have a temperature of approximately 21.3°C and a UV index of 7.65. A UV index above 3 is considered moderate, and values above 7 are high. High UV levels can lead to increased risk of sunburn and other skin damage. Therefore, wearing a hat would be a prudent measure to safeguard against the strong ultraviolet radiation expected."
+}
+```
+
 ## **How it Works**
 
 NOTE: steps 1 to 6 are already done, if you want to add more APIs, you can do so by adding files containing api-endpoint, parameters etc to `/yml` directory
 
-1. **Markdown Generation**: open-meteo's API documentation webpages are scraped for API parameters, and stored in `/docs` directory
-2. **Manual Filteration and Cleanup**: A subset of files extracted are selected and rest are moved to `archive`
+1. **Markdown Generation**: open-meteo's API documentation webpages are scraped for API parameters, and stored in `/docs` directory as `.md` files
+2. **Manual Filteration and Cleanup**: A subset of files extracted are selected, that contain majority of different kinds of API parameters. The rest are moved to `/archive`
 3. **Rule-Based YAML File Generation**: Using `mrkdown_analysis`, for each markdown file, the tables containing parameters are converted to .yaml file, with
 
    - parameter name
@@ -65,14 +98,15 @@ NOTE: steps 1 to 6 are already done, if you want to add more APIs, you can do so
 6. **Manual Refactor and Cleanup**: Another round of cleanup and removal of invalid tags, and editing of incorrect description if required, is done.
 
 7. **Pipeline**: This is the file where magic happens, a RAG pipeline is created
-   1. question context is obtained, for geo-location and date-time, timezone metadata (using geolocation libraries and `llama3.2`)
+   1. question context is obtained, for geo-location and date-time, timezone metadata (using geolocation libraries, `llama3.2` and `gemma2`)
    2. the user's question is extracted into sub-questions, with documents associated with sub-questions clubbed in the response (using `marco-o1`)
    3. API calls with parameters are generated and executed for these sub-questions (using `gemma2`)
    4. Conclusion is obtained on the basis of these API-calls, sub-question and user's main question (using `marco-o1`)
 
 ## **Output**
 
-The output will usually be a conclusion and reasoning associated to the provided conclusion, as a pydantic model named `Conclusion`
+The output will usually be a structured response containing
+conclusion and reasoning associated to the question used asked, as a pydantic model named `Conclusion`
 present in `tool_calls.py`
 
 ## Contributing
