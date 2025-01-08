@@ -66,9 +66,13 @@ python main.py -q "your question"
 
 ### Example 1
 
+question
+
 ```bash
 python main.py -q "will it rain in the next hour in tokyo?"
 ```
+
+response
 
 ```json
 {
@@ -79,9 +83,13 @@ python main.py -q "will it rain in the next hour in tokyo?"
 
 ### Example 2
 
+question
+
 ```bash
 python main.py -q "should I wear a hat tomorrow afternoon? P.S. I'm in Adelaide!"
 ```
+
+response
 
 ```json
 {
