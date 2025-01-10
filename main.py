@@ -15,11 +15,10 @@ def weather_agent_pipeline(question: str) -> tool_calls.Conclusion:
         along with the reasoning for the same
     """
     meta = tool_calls.get_question_meta_data(question)
-    print(meta)
     print(f"🔎 Starting weather pipeline for location '{meta.location}'...")
 
     # Generate documents relevant to user query
-    docs = tool_calls.generate_target_docs_for_query(question)
+    docs = tool_calls.generate_target_docs_for_query(question, meta.location)
     print(f"🗂️ Documents selected based on query '{question}':")
     for doc in docs:
         print(f"   - {doc.model_dump_json(indent=2)}")

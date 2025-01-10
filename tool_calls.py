@@ -230,7 +230,7 @@ and use most critical conditions that would correlate to the query
 """
 
 
-def doc_selection_reasoning_dump(doc: Any, query: str):
+def doc_selection_reasoning_dump(doc: Any, location: str, query: str):
     # ⏲️ Start time stamp
     start_time = datetime.now()
     print(f"📝 [doc_selection_reasoning_dump] Started at {start_time} ...")
@@ -241,6 +241,9 @@ def doc_selection_reasoning_dump(doc: Any, query: str):
 </documents> 
 
 <helper-context>
+    <location>
+        {}
+    </location>
 Provided above, is a list of documents containing tags and description associated to the API call they're responsible for
 NOTE: unless extremely essential, do not include historical_weather_api.md file in the final conclusion
 </helper-context>
@@ -249,7 +252,7 @@ NOTE: unless extremely essential, do not include historical_weather_api.md file 
 {}
 </user-query>
     """.format(
-        doc, query
+        doc, location, query
     )
 
     end_time = datetime.now()
@@ -259,7 +262,7 @@ NOTE: unless extremely essential, do not include historical_weather_api.md file 
     return prompt
 
 
-def generate_target_docs_for_query(user_query: str) -> list[Doc]:
+def generate_target_docs_for_query(user_query: str, location: str) -> list[Doc]:
     """
     Extracts out weather api documents and their parameters
     to be used to generate API calls, that are targetted to respond to user's query
@@ -283,7 +286,9 @@ def generate_target_docs_for_query(user_query: str) -> list[Doc]:
             {"role": "user", "content": doc_selection_reasoning_system},
             {
                 "role": "user",
-                "content": doc_selection_reasoning_dump(files_meta, user_query),
+                "content": doc_selection_reasoning_dump(
+                    files_meta, location, user_query
+                ),
             },
         ],
         format=DocList.model_json_schema(),
